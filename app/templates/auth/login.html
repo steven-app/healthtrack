@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+    body {
+        background-image: url("{{ url_for('static', filename='images/running_green.jpg') }}");
+        background-size: cover;
+        background-position: center 15%;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+    }
+    
+    .login-card {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 15px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+    }
+    
+    .login-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card-header {
+        background-color: var(--primary);
+        color: white;
+        border-radius: 15px 15px 0 0 !important;
+    }
+    
+    .dark-mode .login-card {
+        background-color: rgba(30, 30, 30, 0.85);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center align-items-center" style="min-height: 85vh; padding-top: 10px;">
+        <div class="col-md-5">
+            <div class="card mt-5 login-card">
+                <div class="card-header">
+                    <h3 class="text-center mb-0">Login to HealthTrack</h3>
+                </div>
+                <div class="card-body py-4">
+                    <form method="POST" action="{{ url_for('auth.login') }}">
+                        <div class="mb-4">
+                            <label for="email" class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label for="password" class="form-label">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center mt-4">
+                        <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a></p>
+                        <p class="mb-0">Forgot your password? <a href="{{ url_for('auth.reset_password_request') }}">Reset it here</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

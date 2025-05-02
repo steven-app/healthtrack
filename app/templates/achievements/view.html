@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Achievement Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header {% if earned %}bg-success{% else %}bg-secondary{% endif %} text-white">
+                    <h4 class="mb-0">
+                        {% if earned %}
+                            <i class="fas fa-trophy"></i>
+                        {% else %}
+                            <i class="fas fa-lock"></i>
+                        {% endif %}
+                        {{ achievement.name }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="achievement-icon mb-3">
+                                {% if earned %}
+                                    <i class="fas fa-{{ achievement.icon|default('medal') }} fa-5x text-{{ achievement.level }}"></i>
+                                {% else %}
+                                    <i class="fas fa-{{ achievement.icon|default('medal') }} fa-5x text-secondary opacity-50"></i>
+                                {% endif %}
+                            </div>
+                            <div class="badge bg-{{ achievement.level }} mb-3">{{ achievement.level|capitalize }}</div>
+                            <div>
+                                {% if earned %}
+                                    <span class="badge bg-success">Unlocked</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Locked</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <h5>Details</h5>
+                            <p>{{ achievement.description }}</p>
+                            
+                            <div class="mb-3">
+                                <strong>Category:</strong> {{ achievement.category|capitalize }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Condition:</strong>
+                                {% if achievement.condition_type == 'milestone' %}
+                                    Reach a milestone of {{ achievement.condition_value }}
+                                {% elif achievement.condition_type == 'streak' %}
+                                    Maintain a streak for {{ achievement.condition_value|int }} days
+                                {% elif achievement.condition_type == 'improvement' %}
+                                    Improve by {{ achievement.condition_value }}
+                                {% endif %}
+                            </div>
+                            
+                            {% if earned %}
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle"></i> 
+                                    You earned this achievement on {{ earned_date.strftime('%Y-%m-%d') }}
+                                </div>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Keep working towards your goals to unlock this achievement!
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('achievements.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Achievements
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

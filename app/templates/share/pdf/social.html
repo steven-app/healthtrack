@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>HealthTrack Social Health Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        h1 { color: #1cc88a; }
+        h2 { color: #333; margin-top: 2em; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+        th, td { border: 1px solid #ccc; padding: 0.5em; text-align: left; }
+        th { background: #f4f4f4; }
+        .section { margin-bottom: 2em; }
+    </style>
+</head>
+<body>
+    <h1>HealthTrack Social Health Report</h1>
+    <div class="section">
+        <h2>User Information</h2>
+        <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Gender:</strong> {{ user.gender|capitalize if user.gender else 'Not specified' }}</p>
+        <p><strong>Birth Date:</strong> {{ user.birth_date.strftime('%Y-%m-%d') if user.birth_date else 'Not specified' }}</p>
+        <p><strong>Share Link:</strong> {{ share_link.share_token }}</p>
+        <p><strong>Date Range:</strong> {{ share_link.date_range_start.strftime('%Y-%m-%d') }} to {{ share_link.date_range_end.strftime('%Y-%m-%d') }}</p>
+    </div>
+    <div class="section">
+        <h2>Weight Records</h2>
+        {% if data.weights and data.weights|length > 0 %}
+        <table>
+            <tr><th>Date</th><th>Weight (kg)</th></tr>
+            {% for w in data.weights %}
+            <tr>
+                <td>{{ w.date }}</td>
+                <td>{{ w.weight }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No weight data available.</p>
+        {% endif %}
+    </div>
+    <div class="section">
+        <h2>Heart Rate Records</h2>
+        {% if data.heart_rates and data.heart_rates|length > 0 %}
+        <table>
+            <tr><th>Date</th><th>Min BPM</th><th>Max BPM</th><th>Avg BPM</th></tr>
+            {% for hr in data.heart_rates %}
+            <tr>
+                <td>{{ hr.date }}</td>
+                <td>{{ hr.min_heart_rate }}</td>
+                <td>{{ hr.max_heart_rate }}</td>
+                <td>{{ hr.avg_heart_rate }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No heart rate data available.</p>
+        {% endif %}
+    </div>
+    <div class="section">
+        <h2>Sleep Records</h2>
+        {% if data.sleeps and data.sleeps|length > 0 %}
+        <table>
+            <tr><th>Date</th><th>Duration (hours)</th></tr>
+            {% for s in data.sleeps %}
+            <tr>
+                <td>{{ s.date }}</td>
+                <td>{{ s.duration }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No sleep data available.</p>
+        {% endif %}
+    </div>
+    <div class="section">
+        <h2>Activity Records</h2>
+        {% if data.activities and data.activities|length > 0 %}
+        <table>
+            <tr><th>Date</th><th>Steps</th></tr>
+            {% for a in data.activities %}
+            <tr>
+                <td>{{ a.date }}</td>
+                <td>{{ a.steps }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>No activity data available.</p>
+        {% endif %}
+    </div>
+</body>
+</html> 

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- User menu sidebar -->
+        <div class="col-md-3">
+            <div class="menu-container">
+                <div class="menu-header">Account Management</div>
+                <a href="{{ url_for('user.profile') }}" class="menu-item active">Profile</a>
+                <a href="{{ url_for('user.change_password') }}" class="menu-item">Change Password</a>
+                <a href="{{ url_for('user.account') }}" class="menu-item">Account Settings</a>
+                <a href="{{ url_for('user.export_data') }}" class="menu-item">Export Data</a>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Profile Information</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user.profile') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="first_name" class="form-label">First Name</label>
+                                    {{ form.first_name(class="form-control", id="first_name") }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.first_name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="last_name" class="form-label">Last Name</label>
+                                    {{ form.last_name(class="form-control", id="last_name") }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.last_name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="birth_date" class="form-label">Date of Birth</label>
+                                    {{ form.birth_date(class="form-control", id="birth_date", type="date") }}
+                                    {% if form.birth_date.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.birth_date.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="gender" class="form-label">Gender</label>
+                                    {{ form.gender(class="form-select", id="gender") }}
+                                    {% if form.gender.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.gender.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="height" class="form-label">Height (cm)</label>
+                                    {{ form.height(class="form-control", id="height", type="number") }}
+                                    {% if form.height.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.height.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="weight" class="form-label">Weight (kg)</label>
+                                    {{ form.weight(class="form-control", id="weight", type="number", step="0.1") }}
+                                    {% if form.weight.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.weight.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="bio" class="form-label">Bio</label>
+                            {{ form.bio(class="form-control", id="bio", rows=3) }}
+                            {% if form.bio.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.bio.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

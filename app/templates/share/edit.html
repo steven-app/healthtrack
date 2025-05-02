@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Share Link{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Edit Share Link</h1>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Edit "{{ share_link.name }}"</h5>
+            <span class="badge {% if share_link.is_expired %}bg-danger{% elif share_link.days_until_expiry == -1 %}bg-info{% else %}bg-success{% endif %}">
+                {% if share_link.is_expired %}
+                    Expired
+                {% elif share_link.days_until_expiry == -1 %}
+                    Never Expires
+                {% else %}
+                    Expires in {{ share_link.days_until_expiry }} days
+                {% endif %}
+            </span>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h6>Share Link URL</h6>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="{{ share_link.share_url }}" readonly id="share-url">
+                    <button class="btn btn-outline-secondary" type="button" id="copy-btn">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+                <small class="text-muted">Share this link with the intended recipient</small>
+            </div>
+            
+            <form method="POST" action="{{ url_for('share.edit_share', share_id=share_link.id) }}">
+                {{ form.csrf_token }}
+                
+                <div class="mb-3">
+                    <label for="name" class="form-label">{{ form.name.label }}</label>
+                    {{ form.name(class="form-control") }}
+                    {% if form.name.errors %}
+                    <div class="text-danger mt-1">
+                        {% for error in form.name.errors %}
+                        <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <div class="form-check mb-2">
+                        {{ form.never_expire(class="form-check-input") }}
+                        <label class="form-check-label" for="never_expire">
+                            {{ form.never_expire.label }}
+                        </label>
+                        <small class="text-muted d-block">When checked, the share link will never expire.</small>
+                    </div>
+                    
+                    <div id="expiry-days-container" {% if form.never_expire.data %}style="display:none;"{% endif %}>
+                        <label for="expiry_days" class="form-label">{{ form.expiry_days.label }}</label>
+                        {{ form.expiry_days(class="form-control") }}
+                        {% if form.expiry_days.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.expiry_days.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">Extends the expiration date by this many days from today</small>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Privacy Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Update which types of data to include:</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_weight(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_weight">
+                                        {{ form.show_weight.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_heart_rate(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_heart_rate">
+                                        {{ form.show_heart_rate.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_activity(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_activity">
+                                        {{ form.show_activity.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_sleep(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_sleep">
+                                        {{ form.show_sleep.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_goals(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_goals">
+                                        {{ form.show_goals.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_achievements(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_achievements">
+                                        {{ form.show_achievements.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Password Protection</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            {{ form.password_protect(class="form-check-input", id="password_protect") }}
+                            <label class="form-check-label" for="password_protect">
+                                {{ form.password_protect.label }}
+                            </label>
+                        </div>
+                        
+                        <div id="password-options" {% if not form.password_protect.data %}style="display:none;"{% endif %}>
+                            <div class="form-check mb-2 ms-4">
+                                {{ form.one_time_password(class="form-check-input", id="one_time_password") }}
+                                <label class="form-check-label" for="one_time_password">
+                                    {{ form.one_time_password.label }}
+                                </label>
+                                <small class="text-muted d-block">A random 4-digit password will be generated automatically.</small>
+                            </div>
+                            
+                            <div class="form-check mb-3 ms-4" id="change-password-option">
+                                {{ form.change_password(class="form-check-input", id="change_password") }}
+                                <label class="form-check-label" for="change_password">
+                                    {{ form.change_password.label }}
+                                </label>
+                            </div>
+                            
+                            <div id="password-field" class="ms-4" {% if not form.change_password.data %}style="display:none;"{% endif %}>
+                                <label for="password" class="form-label">{{ form.password.label }}</label>
+                                {{ form.password(class="form-control") }}
+                                {% if form.password.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{{ url_for('share.manage') }}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <a href="{{ share_link.share_url }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> View
+                        </a>
+                    </div>
+                    <div>
+                        {{ form.delete(class="btn btn-danger me-2", onclick="return confirm('Are you sure you want to delete this share link? This action cannot be undone.')") }}
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Share Details</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Template Type:</strong> 
+                        {% if share_link.template_type == 'social' %}
+                            Social (Friends & Family)
+                        {% else %}
+                            Medical (Healthcare Providers)
+                        {% endif %}
+                    </p>
+                    <p><strong>Created:</strong> {{ share_link.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Date Range:</strong> {{ share_link.date_range_start.strftime('%Y-%m-%d') }} to {{ share_link.date_range_end.strftime('%Y-%m-%d') }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Expires:</strong> 
+                        {% if share_link.days_until_expiry == -1 %}
+                            Never Expires
+                        {% else %}
+                            {{ share_link.expires_at.strftime('%Y-%m-%d %H:%M') }}
+                        {% endif %}
+                    </p>
+                    <p><strong>Last Accessed:</strong> 
+                        {% if share_link.last_accessed %}
+                            {{ share_link.last_accessed.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </p>
+                    <p><strong>Times Viewed:</strong> {{ share_link.access_count or 0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Copy link functionality
+    const copyBtn = document.getElementById('copy-btn');
+    const shareUrl = document.getElementById('share-url');
+    
+    if (copyBtn && shareUrl) {
+        copyBtn.addEventListener('click', function() {
+            shareUrl.select();
+            navigator.clipboard.writeText(shareUrl.value).then(() => {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            });
+        });
+    }
+    
+    // Handle never expire checkbox
+    const neverExpireCheckbox = document.getElementById('never_expire');
+    const expiryDaysContainer = document.getElementById('expiry-days-container');
+    
+    if (neverExpireCheckbox && expiryDaysContainer) {
+        neverExpireCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                expiryDaysContainer.style.display = 'none';
+            } else {
+                expiryDaysContainer.style.display = 'block';
+            }
+        });
+    }
+    
+    // Handle password protection options
+    const passwordProtectCheckbox = document.getElementById('password_protect');
+    const passwordOptions = document.getElementById('password-options');
+    const oneTimePasswordCheckbox = document.getElementById('one_time_password');
+    const changePasswordOption = document.getElementById('change-password-option');
+    const passwordField = document.getElementById('password-field');
+    
+    if (passwordProtectCheckbox && passwordOptions) {
+        passwordProtectCheckbox.addEventListener('change', function() {
+            passwordOptions.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    
+    // Handle one-time password option
+    if (oneTimePasswordCheckbox && changePasswordOption) {
+        oneTimePasswordCheckbox.addEventListener('change', function() {
+            changePasswordOption.style.display = this.checked ? 'none' : 'block';
+            
+            // If one-time password is checked, hide password field and uncheck change password
+            if (this.checked && document.getElementById('change_password')) {
+                document.getElementById('change_password').checked = false;
+                if (passwordField) passwordField.style.display = 'none';
+            }
+        });
+        
+        // Initial state
+        if (oneTimePasswordCheckbox.checked && changePasswordOption) {
+            changePasswordOption.style.display = 'none';
+            if (passwordField) passwordField.style.display = 'none';
+        }
+    }
+    
+    // Handle change password option
+    const changePasswordCheckbox = document.getElementById('change_password');
+    
+    if (changePasswordCheckbox && passwordField) {
+        changePasswordCheckbox.addEventListener('change', function() {
+            passwordField.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+});
+</script>
+{% endblock %} 

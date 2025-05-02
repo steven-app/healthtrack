@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Share Links{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Manage Share Links</h1>
+    
+    <div class="mb-4">
+        <a href="{{ url_for('share.create_share') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create New Share Link
+        </a>
+        <button id="refreshShareLinks" class="btn btn-outline-secondary ms-2">
+            <i class="fas fa-sync-alt"></i> Refresh List
+        </button>
+    </div>
+    
+    <div id="shareLinksContainer">
+        {% if share_links %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Your Share Links</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Template</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Access Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shareLinksTableBody">
+                        {% for link in share_links %}
+                        <tr>
+                            <td>{{ link.name }}</td>
+                            <td>
+                                {% if link.template_type == 'social' %}
+                                <span class="badge bg-primary">Social</span>
+                                {% else %}
+                                <span class="badge bg-info">Medical</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ link.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% if link.is_expired %}
+                                    <span class="badge bg-danger">Expired</span>
+                                {% elif link.expires_at is none %}
+                                    <span class="badge bg-info">Never Expires</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ link.expires_at.strftime('%Y-%m-%d') }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ link.access_count if link.access_count else 0 }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('share.edit_share', share_id=link.id) }}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </a>
+                                    <a href="{{ link.share_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-external-link-alt"></i> View
+                                    </a>
+                                    <button class="btn btn-sm btn-outline-success copy-link" data-url="{{ link.share_url }}">
+                                        <i class="fas fa-copy"></i> Copy Link
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger delete-link" data-token="{{ link.share_token }}" data-name="{{ link.name }}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> You haven't created any share links yet. 
+            <a href="{{ url_for('share.create_share') }}">Create your first one</a> to share your health data.
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">About Sharing</h5>
+        </div>
+        <div class="card-body">
+            <p>Share links allow you to safely share your health data with others:</p>
+            <ul>
+                <li><strong>Social sharing</strong> is ideal for friends and family, showing achievements and progress.</li>
+                <li><strong>Medical sharing</strong> is detailed for healthcare providers, showing comprehensive data.</li>
+            </ul>
+            <p>All share links have an expiration date and privacy controls to ensure your data remains secure.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the share link "<span id="shareLinkName"></span>"? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh share links on page load
+    // This ensures links created through API or other means are visible
+    fetchShareLinks();
+    
+    // Refresh button handler
+    document.getElementById('refreshShareLinks').addEventListener('click', function() {
+        this.querySelector('i').classList.add('fa-spin');
+        fetchShareLinks().finally(() => {
+            setTimeout(() => {
+                this.querySelector('i').classList.remove('fa-spin');
+            }, 500);
+        });
+    });
+    
+    // Function to fetch share links via API
+    function fetchShareLinks() {
+        return fetch('/share/links', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.share_links) {
+                updateShareLinksUI(data.share_links);
+            } else {
+                console.error('Failed to fetch share links:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching share links:', error);
+        });
+    }
+    
+    // Function to update the share links UI
+    function updateShareLinksUI(links) {
+        const container = document.getElementById('shareLinksContainer');
+        
+        if (links.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> You haven't created any share links yet. 
+                    <a href="{{ url_for('share.create_share') }}">Create your first one</a> to share your health data.
+                </div>
+            `;
+            return;
+        }
+        
+        // If we have links but no table yet, create the table structure
+        if (!document.querySelector('#shareLinksContainer .card')) {
+            container.innerHTML = `
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Your Share Links</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Template</th>
+                                    <th>Created</th>
+                                    <th>Expires</th>
+                                    <th>Access Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="shareLinksTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Update the table body with the links
+        const tableBody = document.getElementById('shareLinksTableBody');
+        tableBody.innerHTML = '';
+        
+        links.forEach(link => {
+            const row = document.createElement('tr');
+            
+            // Format date string
+            const createdDate = new Date(link.created_at);
+            const formattedCreatedDate = createdDate.toISOString().split('T')[0];
+            
+            // Determine expiry badge
+            let expiryBadge;
+            if (link.expires_at === null) {
+                expiryBadge = '<span class="badge bg-info">Never Expires</span>';
+            } else {
+                const expiryDate = new Date(link.expires_at);
+                const now = new Date();
+                if (expiryDate < now) {
+                    expiryBadge = '<span class="badge bg-danger">Expired</span>';
+                } else {
+                    const formattedExpiryDate = expiryDate.toISOString().split('T')[0];
+                    expiryBadge = `<span class="badge bg-success">${formattedExpiryDate}</span>`;
+                }
+            }
+            
+            row.innerHTML = `
+                <td>${link.name || 'Unnamed Link'}</td>
+                <td>
+                    ${link.template_type === 'social' 
+                        ? '<span class="badge bg-primary">Social</span>' 
+                        : '<span class="badge bg-info">Medical</span>'}
+                </td>
+                <td>${formattedCreatedDate}</td>
+                <td>${expiryBadge}</td>
+                <td>${link.access_count || 0}</td>
+                <td>
+                    <div class="btn-group">
+                        <a href="/share/edit/${link.id}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <a href="/share/view/${link.share_token}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> View
+                        </a>
+                        <button class="btn btn-sm btn-outline-success copy-link" data-url="${window.location.origin}/share/view/${link.share_token}">
+                            <i class="fas fa-copy"></i> Copy Link
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger delete-link" data-token="${link.share_token}" data-name="${link.name || 'Unnamed Link'}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        // Re-attach event listeners for the new buttons
+        attachButtonEventListeners();
+    }
+    
+    // Function to attach event listeners to buttons
+    function attachButtonEventListeners() {
+        // Copy link functionality
+        document.querySelectorAll('.copy-link').forEach(button => {
+            button.addEventListener('click', function() {
+                const url = this.getAttribute('data-url');
+                // Use absolute URL
+                const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
+                
+                navigator.clipboard.writeText(absoluteUrl).then(() => {
+                    // Change button text temporarily
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    this.classList.remove('btn-outline-success');
+                    this.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.classList.remove('btn-success');
+                        this.classList.add('btn-outline-success');
+                    }, 2000);
+                });
+            });
+        });
+        
+        // Delete link functionality
+        document.querySelectorAll('.delete-link').forEach(button => {
+            button.addEventListener('click', function() {
+                const token = this.getAttribute('data-token');
+                const name = this.getAttribute('data-name');
+                tokenToDelete = token;
+                
+                // Update modal content
+                document.getElementById('shareLinkName').textContent = name;
+                
+                // Show confirmation modal
+                deleteModal.show();
+            });
+        });
+    }
+    
+    // Copy link functionality (initial setup)
+    document.querySelectorAll('.copy-link').forEach(button => {
+        button.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            // Use absolute URL
+            const absoluteUrl = url.startsWith('http') ? url : window.location.origin + url;
+            
+            navigator.clipboard.writeText(absoluteUrl).then(() => {
+                // Change button text temporarily
+                const originalHTML = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                this.classList.remove('btn-outline-success');
+                this.classList.add('btn-success');
+                
+                setTimeout(() => {
+                    this.innerHTML = originalHTML;
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-outline-success');
+                }, 2000);
+            });
+        });
+    });
+    
+    // Delete link functionality
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+    let tokenToDelete = '';
+    
+    document.querySelectorAll('.delete-link').forEach(button => {
+        button.addEventListener('click', function() {
+            const token = this.getAttribute('data-token');
+            const name = this.getAttribute('data-name');
+            tokenToDelete = token;
+            
+            // Update modal content
+            document.getElementById('shareLinkName').textContent = name;
+            
+            // Show confirmation modal
+            deleteModal.show();
+        });
+    });
+    
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        if (tokenToDelete) {
+            // Send delete request
+            fetch(`/share/links/${tokenToDelete}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrfToken() // Function to get CSRF token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    showAlert('Share link deleted successfully', 'success');
+                    
+                    // Refresh the share links list
+                    fetchShareLinks();
+                } else {
+                    // Show error message
+                    showAlert('Error deleting share link: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                showAlert('Error deleting share link', 'danger');
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                // Hide modal
+                deleteModal.hide();
+            });
+        }
+    });
+    
+    // Check for success message in URL (for cases where user is redirected after form submission)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('created') || urlParams.has('success')) {
+        // Refresh the share links
+        fetchShareLinks();
+    }
+    
+    // Utility function to get CSRF token
+    function getCsrfToken() {
+        // Try to get it from meta tag
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            return metaTag.getAttribute('content');
+        }
+        
+        // Or from cookie
+        return document.cookie.split('; ')
+            .find(row => row.startsWith('csrf_token='))
+            ?.split('=')[1];
+    }
+    
+    // Utility function to show alerts
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        
+        // Insert at the top of the container
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(() => {
+            alertDiv.classList.remove('show');
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 150);
+        }, 5000);
+    }
+});
+</script>
+{% endblock %} 

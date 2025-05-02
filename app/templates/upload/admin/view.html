@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Import Record Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Complete modal rewrite */
+    .custom-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9998;
+        display: none;
+    }
+    
+    .custom-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: white;
+        border-radius: 0.3rem;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        z-index: 9999;
+        width: 90%;
+        max-width: 500px;
+        display: none;
+    }
+    
+    .custom-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .custom-modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+    
+    .custom-modal-close {
+        background: transparent;
+        border: 0;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+    
+    .custom-modal-body {
+        padding: 1rem;
+    }
+    
+    .custom-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        padding: 1rem;
+        border-top: 1px solid #dee2e6;
+        gap: 0.5rem;
+    }
+    
+    /* Force body to disable scrolling when modal is open */
+    body.modal-open-custom {
+        overflow: hidden;
+        padding-right: 17px; /* Compensate for scrollbar removal */
+    }
+    
+    /* Dark mode support */
+    .dark-mode .custom-modal {
+        background-color: #343a40;
+        color: white;
+    }
+    
+    .dark-mode .custom-modal-header,
+    .dark-mode .custom-modal-footer {
+        border-color: #495057;
+    }
+    
+    .dark-mode .custom-modal-close {
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>Import Record Details</h1>
+            <p class="text-muted">View detailed information and sample data for this import record</p>
+        </div>
+        <div class="col-md-6 text-end">
+            <button type="button" class="btn btn-danger" id="deleteRecordBtn" data-id="{{ import_log.id }}">
+                <i class="fas fa-trash"></i> Delete Import
+            </button>
+            <a href="{{ url_for('upload.admin_import_logs') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Basic Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Basic Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th width="30%">ID</th>
+                                <td>{{ import_log.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>User</th>
+                                <td>{{ user.username }} ({{ user.email }})</td>
+                            </tr>
+                            <tr>
+                                <th>Data Source</th>
+                                <td>{{ import_log.data_source }}</td>
+                            </tr>
+                            <tr>
+                                <th>File Name</th>
+                                <td>{{ import_log.file_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    {% if import_log.status == 'success' %}
+                                        <span class="badge bg-success">Success</span>
+                                    {% elif import_log.status == 'failed' %}
+                                        <span class="badge bg-danger">Failed</span>
+                                    {% elif import_log.status == 'processing' %}
+                                        <span class="badge bg-warning">Processing</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ import_log.status }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table">
+                        <tbody>
+                            <tr>
+                                <th width="30%">Record Count</th>
+                                <td>{{ import_log.records_processed }}</td>
+                            </tr>
+                            <tr>
+                                <th>Created At</th>
+                                <td>{{ import_log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            <tr>
+                                <th>Completed At</th>
+                                <td>{{ import_log.completed_at.strftime('%Y-%m-%d %H:%M:%S') if import_log.completed_at else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Error Message</th>
+                                <td>{{ import_log.error_message or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Imported Data</th>
+                                <td>
+                                    <span class="badge bg-primary">Weight {{ counts.weight }}</span>
+                                    <span class="badge bg-primary">Heart Rate {{ counts.heart_rate }}</span>
+                                    <span class="badge bg-primary">Activity {{ counts.activity }}</span>
+                                    <span class="badge bg-primary">Sleep {{ counts.sleep }}</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Imported Data Preview -->
+    <div class="row">
+        <!-- Weight Data -->
+        {% if weights %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Weight Data ({{ counts.weight }} records)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Time</th>
+                                        <th>Value</th>
+                                        <th>Unit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for weight in weights %}
+                                        <tr>
+                                            <td>{{ weight.id }}</td>
+                                            <td>{{ weight.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ weight.value }}</td>
+                                            <td>{{ weight.unit }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Heart Rate Data -->
+        {% if heart_rates %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">Heart Rate Data ({{ counts.heart_rate }} records)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Time</th>
+                                        <th>Heart Rate</th>
+                                        <th>Activity Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for hr in heart_rates %}
+                                        <tr>
+                                            <td>{{ hr.id }}</td>
+                                            <td>{{ hr.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ hr.value }} bpm</td>
+                                            <td>{{ hr.activity_type or '-' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Activity Data -->
+        {% if activities %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Activity Data ({{ counts.activity }} records)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Time</th>
+                                        <th>Steps</th>
+                                        <th>Calories</th>
+                                        <th>Distance</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in activities %}
+                                        <tr>
+                                            <td>{{ activity.id }}</td>
+                                            <td>{{ activity.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                            <td>{{ activity.total_steps or '-' }}</td>
+                                            <td>{{ activity.calories_burned or '-' }}</td>
+                                            <td>{{ activity.distance or '-' }} {{ activity.distance_unit or '' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Sleep Data -->
+        {% if sleeps %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Sleep Data ({{ counts.sleep }} records)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Duration</th>
+                                        <th>Quality</th>
+                                        <th>Start</th>
+                                        <th>End</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sleep in sleeps %}
+                                        <tr>
+                                            <td>{{ sleep.id }}</td>
+                                            <td>{{ sleep.duration }} {{ sleep.unit }}</td>
+                                            <td>{{ sleep.quality or '-' }}</td>
+                                            <td>{{ sleep.start_time.strftime('%Y-%m-%d %H:%M') if sleep.start_time else '-' }}</td>
+                                            <td>{{ sleep.end_time.strftime('%Y-%m-%d %H:%M') if sleep.end_time else '-' }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Custom Delete Modal (No Bootstrap) -->
+<div id="customModalBackdrop" class="custom-modal-backdrop"></div>
+<div id="customDeleteModal" class="custom-modal">
+    <div class="custom-modal-header">
+        <h5 class="custom-modal-title">Confirm Deletion</h5>
+        <button type="button" class="custom-modal-close" id="customModalClose">&times;</button>
+    </div>
+    <div class="custom-modal-body">
+        <p>Are you sure you want to delete the import record with ID <span id="deleteRecordId"></span>?</p>
+        <p class="text-danger">
+            <i class="fas fa-exclamation-triangle"></i> 
+            This action will delete all data records associated with this import and cannot be undone.
+        </p>
+    </div>
+    <div class="custom-modal-footer">
+        <button type="button" class="btn btn-secondary" id="customModalCancel">Cancel</button>
+        <form id="deleteForm" method="post">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get delete button
+        const deleteBtn = document.getElementById('deleteRecordBtn');
+        
+        // Get custom modal elements
+        const backdrop = document.getElementById('customModalBackdrop');
+        const modal = document.getElementById('customDeleteModal');
+        const closeBtn = document.getElementById('customModalClose');
+        const cancelBtn = document.getElementById('customModalCancel');
+        const deleteForm = document.getElementById('deleteForm');
+        const deleteRecordId = document.getElementById('deleteRecordId');
+        
+        // Function to show custom modal
+        function showModal(id) {
+            // Set record ID
+            deleteRecordId.textContent = id;
+            
+            // Set form action
+            deleteForm.action = "{{ url_for('upload.admin_delete_import_log', import_log_id=0) }}".replace('0', id);
+            
+            // Show backdrop and modal
+            backdrop.style.display = 'block';
+            modal.style.display = 'block';
+            
+            // Add modal-open class to body
+            document.body.classList.add('modal-open-custom');
+            
+            // Focus on modal to capture keyboard events
+            modal.focus();
+        }
+        
+        // Function to hide custom modal
+        function hideModal() {
+            backdrop.style.display = 'none';
+            modal.style.display = 'none';
+            
+            // Remove modal-open class from body
+            document.body.classList.remove('modal-open-custom');
+        }
+        
+        // Add click event to delete button
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const logId = this.getAttribute('data-id');
+                showModal(logId);
+            });
+        }
+        
+        // Add click event to close button
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideModal();
+            });
+        }
+        
+        // Add click event to cancel button
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                hideModal();
+            });
+        }
+        
+        // Close modal when clicking backdrop
+        backdrop.addEventListener('click', function(e) {
+            hideModal();
+        });
+        
+        // Prevent closing when clicking on modal content
+        modal.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Close modal when pressing ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && backdrop.style.display === 'block') {
+                hideModal();
+            }
+        });
+    });
+</script>
+{% endblock %} 

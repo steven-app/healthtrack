@@ -1,0 +1,490 @@
+{% extends "share/base_share.html" %}
+
+{% block title %}Health Data Shared by {{ user.get_full_name() }}{% endblock %}
+
+{% block head_extras %}
+<style>
+    .stat-card {
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.15rem 1.75rem rgba(0, 0, 0, 0.1);
+    }
+    .stat-card-header {
+        background-color: #4e73df;
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .stat-card-body {
+        padding: 1.5rem;
+        background-color: white;
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #4e73df;
+    }
+    .stat-text {
+        color: #858796;
+        margin-bottom: 0;
+    }
+    .activity-icon {
+        font-size: 2.5rem;
+        color: #4e73df;
+    }
+    .achievement-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 0.15rem 1.75rem rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+    .achievement-card:hover {
+        transform: translateY(-5px);
+    }
+    .progress-container {
+        margin-top: 1rem;
+    }
+    .achievement-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: gold;
+    }
+    .chart-container {
+        height: 300px;
+        margin-bottom: 1.5rem;
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 0.15rem 1.75rem rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Personal Message -->
+    {% if share_link.personal_message %}
+    <div class="alert alert-info mb-4">
+        <i class="fas fa-comment-dots me-2"></i>
+        <strong>Message from {{ user.get_full_name() }}:</strong> {{ share_link.personal_message }}
+    </div>
+    {% endif %}
+    
+    <!-- User Information -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-user me-2"></i>User Information</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                    <p><strong>Gender:</strong> {{ user.gender|capitalize if user.gender else 'Not specified' }}</p>
+                    <p><strong>Birth Date:</strong> {{ user.birth_date.strftime('%Y-%m-%d') if user.birth_date else 'Not specified' }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Share Link:</strong> {{ share_link.share_token }}</p>
+                    <p><strong>Date Range:</strong> {{ share_link.date_range_start.strftime('%Y-%m-%d') }} to {{ share_link.date_range_end.strftime('%Y-%m-%d') }}</p>
+                    <p><strong>Latest Weight (kg):</strong> {{ data.weights[0].weight if data.weights else 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Health Stats -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Health Snapshot</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% if share_link.show_activity %}
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-walking activity-icon mb-3"></i>
+                        <h5>Daily Steps</h5>
+                        <div class="stat-number">{{ data.summary.activity.avg_steps|int }}</div>
+                        <p class="stat-text">Avg. daily steps</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if share_link.show_heart_rate %}
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-heartbeat activity-icon mb-3"></i>
+                        <h5>Heart Rate</h5>
+                        <div class="stat-number">{{ data.summary.heart_rate.avg|int }}</div>
+                        <p class="stat-text">Avg. BPM</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if share_link.show_sleep %}
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-bed activity-icon mb-3"></i>
+                        <h5>Sleep</h5>
+                        <div class="stat-number">{{ data.summary.sleep.avg_duration_hours|round(1) }}</div>
+                        <p class="stat-text">Avg. hours/night</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if share_link.show_weight %}
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <i class="fas fa-weight activity-icon mb-3"></i>
+                        <h5>Weight</h5>
+                        <div class="stat-number">{{ data.weights[0].weight if data.weights else 'N/A' }}</div>
+                        <p class="stat-text">Latest weight (kg)</p>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Goals -->
+    {% if share_link.show_goals and data.goals|length > 0 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-bullseye me-2"></i>My Health Goals</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for goal in data.goals[:3] %}
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <h5 class="mb-0">
+                                {% if goal.category == 'weight' %}
+                                <i class="fas fa-weight me-2"></i>
+                                {% elif goal.category == 'steps' %}
+                                <i class="fas fa-walking me-2"></i>
+                                {% elif goal.category == 'heart_rate' %}
+                                <i class="fas fa-heartbeat me-2"></i>
+                                {% elif goal.category == 'sleep' %}
+                                <i class="fas fa-bed me-2"></i>
+                                {% else %}
+                                <i class="fas fa-chart-line me-2"></i>
+                                {% endif %}
+                                {{ goal.category|capitalize }} Goal
+                            </h5>
+                        </div>
+                        <div class="stat-card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Target: {{ goal.target_value }} {{ goal.unit }}</span>
+                                <span>Current: {{ goal.current_value }} {{ goal.unit }}</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar {% if goal.completed %}bg-success{% endif %}" 
+                                         role="progressbar" 
+                                         style="width: {{ goal.progress }}%;" 
+                                         aria-valuenow="{{ goal.progress }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ goal.progress }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Achievements -->
+    {% if share_link.show_achievements and data.achievements|length > 0 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-trophy me-2"></i>Recent Achievements</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for achievement in data.achievements[:3] %}
+                <div class="col-md-4">
+                    <div class="achievement-card text-center">
+                        <div class="achievement-icon">
+                            {% if achievement.category == 'weight' %}
+                            <i class="fas fa-weight text-success"></i>
+                            {% elif achievement.category == 'steps' %}
+                            <i class="fas fa-walking text-primary"></i>
+                            {% elif achievement.category == 'heart_rate' %}
+                            <i class="fas fa-heartbeat text-danger"></i>
+                            {% elif achievement.category == 'sleep' %}
+                            <i class="fas fa-bed text-info"></i>
+                            {% else %}
+                            <i class="fas fa-award text-warning"></i>
+                            {% endif %}
+                        </div>
+                        <h5>{{ achievement.name }}</h5>
+                        <p class="text-muted">{{ achievement.description }}</p>
+                        <small class="text-muted">Earned on {{ achievement.earned_at[:10] if achievement.earned_at else 'N/A' }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Activity Trends -->
+    {% if share_link.show_activity and data.activities|length > 0 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-walking me-2"></i>Activity Trends</h4>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Heart Rate Trends -->
+    {% if share_link.show_heart_rate and data.heart_rates|length > 0 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Heart Rate Trends (Average Daily BPM)</h4>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="heartRateChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Sleep Insights -->
+    {% if share_link.show_sleep and data.sleeps|length > 0 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-bed me-2"></i>Sleep Insights</h4>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="sleepChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Weight Trends -->
+    {% if share_link.show_weight and data.weights|length > 0 %}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0"><i class="fas fa-weight me-2"></i>Weight Trends</h4>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="weightChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Helper: get full date range
+        const startDate = new Date('{{ share_link.date_range_start.strftime('%Y-%m-%d') }}');
+        const endDate = new Date('{{ share_link.date_range_end.strftime('%Y-%m-%d') }}');
+        
+        // Convert date to ISO format YYYY-MM-DD for display
+        function formatDateISO(date) {
+            return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD
+        }
+        
+        function getDateArray(start, end) {
+            const arr = [];
+            let dt = new Date(start);
+            while (dt <= end) {
+                arr.push(formatDateISO(dt));
+                dt.setDate(dt.getDate() + 1);
+            }
+            return arr;
+        }
+        const fullLabels = getDateArray(startDate, endDate);
+        var xLabel = 'Date';
+        
+        {% if share_link.show_activity and data.activities|length > 0 %}
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityData = {{ data.activities|tojson }};
+        console.log("Activity data:", activityData); // Log to inspect data structure
+        const activityMap = {};
+        activityData.forEach(function(item) {
+            // Check data structure and use the correct field
+            if (item.total_steps !== undefined) {
+                activityMap[item.date] = item.total_steps;
+            } else if (item.steps !== undefined) {
+                activityMap[item.date] = item.steps;
+            } else {
+                console.log("No steps data found in item:", item);
+            }
+        });
+        const activityLabels = fullLabels;
+        const activityValues = activityLabels.map(date => activityMap[date] !== undefined ? activityMap[date] : null);
+        new Chart(activityCtx, {
+            type: 'bar',
+            data: {
+                labels: activityLabels,
+                datasets: [{
+                    label: 'Steps',
+                    data: activityValues,
+                    backgroundColor: 'rgba(246, 194, 62, 0.7)',
+                    borderColor: 'rgba(246, 194, 62, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Steps' }
+                    },
+                    x: {
+                        title: { display: true, text: xLabel },
+                        ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 0 }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        {% if share_link.show_heart_rate and data.heart_rates|length > 0 %}
+        // Heart Rate Chart
+        const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
+        const heartRateData = {{ data.heart_rates|tojson }};
+        const hrMap = {};
+        heartRateData.forEach(function(item) {
+            hrMap[item.date] = item.avg_heart_rate;
+        });
+        const hrLabels = fullLabels;
+        const hrValues = hrLabels.map(date => hrMap[date] !== undefined ? hrMap[date] : null);
+        new Chart(heartRateCtx, {
+            type: 'line',
+            data: {
+                labels: hrLabels,
+                datasets: [{
+                    label: 'Avg Heart Rate (BPM)',
+                    data: hrValues,
+                    backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                    borderColor: 'rgba(78, 115, 223, 1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'BPM' }
+                    },
+                    x: {
+                        title: { display: true, text: xLabel },
+                        ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 0 }
+                    }
+                }
+            }
+        });
+        {% endif %}
+        
+        {% if share_link.show_sleep and data.sleeps|length > 0 %}
+        // Sleep Chart
+        const sleepCtx = document.getElementById('sleepChart').getContext('2d');
+        const sleepData = {{ data.sleeps|tojson }};
+        const sleepMap = {};
+        sleepData.forEach(function(item) {
+            // Convert duration from minutes to hours for display
+            sleepMap[item.date] = item.duration / 60;
+        });
+        const sleepLabels = fullLabels;
+        const sleepValues = sleepLabels.map(date => sleepMap[date] !== undefined ? sleepMap[date] : null);
+        new Chart(sleepCtx, {
+            type: 'bar',
+            data: {
+                labels: sleepLabels,
+                datasets: [{
+                    label: 'Sleep Duration (hours)',
+                    data: sleepValues,
+                    backgroundColor: 'rgba(54, 185, 204, 0.7)',
+                    borderColor: 'rgba(54, 185, 204, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Hours' }
+                    },
+                    x: {
+                        title: { display: true, text: xLabel },
+                        ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 0 }
+                    }
+                }
+            }
+        });
+        {% endif %}
+
+        {% if share_link.show_weight and data.weights|length > 0 %}
+        // Weight Chart
+        const weightCtx = document.getElementById('weightChart').getContext('2d');
+        const weightData = {{ data.weights|tojson }};
+        const weightMap = {};
+        weightData.forEach(function(item) {
+            weightMap[item.date] = item.weight;
+        });
+        const weightLabels = fullLabels;
+        const weightValues = weightLabels.map(date => weightMap[date] !== undefined ? weightMap[date] : null);
+        new Chart(weightCtx, {
+            type: 'bar',
+            data: {
+                labels: weightLabels,
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: weightValues,
+                    backgroundColor: 'rgba(28, 200, 138, 0.7)',
+                    borderColor: 'rgba(28, 200, 138, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'kg' }
+                    },
+                    x: {
+                        title: { display: true, text: xLabel },
+                        ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 0 }
+                    }
+                }
+            }
+        });
+        {% endif %}
+    });
+</script>
+{% endblock %} 

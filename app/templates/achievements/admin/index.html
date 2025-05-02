@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Achievements{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>Manage Achievements</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('achievements.create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Create New Achievement
+            </a>
+            <a href="{{ url_for('achievements.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Achievements
+            </a>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">All Achievements</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Level</th>
+                            <th>Condition</th>
+                            <th>Related to</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for achievement in achievements %}
+                            <tr>
+                                <td>{{ achievement.id }}</td>
+                                <td>
+                                    <i class="fas fa-{{ achievement.icon|default('medal') }} text-{{ achievement.level }}"></i>
+                                    <span class="ms-2">{{ achievement.name }}</span>
+                                </td>
+                                <td>{{ achievement.category|capitalize }}</td>
+                                <td>
+                                    <span class="badge bg-{{ achievement.level }}">
+                                        {{ achievement.level|capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ achievement.condition_type|capitalize }}:</strong> {{ achievement.condition_value }}
+                                </td>
+                                <td>
+                                    {% if achievement.progress_related %}
+                                        <span class="badge bg-info">Progress</span>
+                                    {% endif %}
+                                    {% if achievement.goal_related %}
+                                        <span class="badge bg-success">Goals</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{{ url_for('achievements.edit', achievement_id=achievement.id) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#deleteModal{{ achievement.id }}">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Delete Modal -->
+                                    <div class="modal fade" id="deleteModal{{ achievement.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Confirm Delete</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to delete the achievement "{{ achievement.name }}"?</p>
+                                                    <p class="text-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i> 
+                                                        This action cannot be undone, and any users who have earned this achievement will lose it.
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <form action="{{ url_for('achievements.delete', achievement_id=achievement.id) }}" method="post">
+                                                        <button type="submit" class="btn btn-danger">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

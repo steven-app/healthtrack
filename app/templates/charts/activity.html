@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.toggle-btn-group {
+    display: inline-flex;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e0f7fa;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    gap: 0;
+    margin-bottom: 1.5rem;
+}
+.toggle-btn {
+    border: none;
+    background: transparent;
+    color: #4ecdd4;
+    padding: 0.35em 1.2em;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.6;
+    min-width: 80px;
+    min-height: 36px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.18s, color 0.18s;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+.toggle-btn:first-child {
+    border-radius: 999px 0 0 999px;
+}
+.toggle-btn:last-child {
+    border-radius: 0 999px 999px 0;
+}
+.toggle-btn:not(:last-child) {
+    border-right: 1px solid #c2eaea;
+}
+.toggle-btn.active, .toggle-btn:active {
+    background: #4ecdd4;
+    color: #fff;
+    z-index: 1;
+}
+.toggle-btn:not(.active):hover {
+    background: #b2ebf2;
+    color: #0097a7;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="toggle-btn-group" role="group">
+                            <a href="{{ url_for(endpoint + '.daily') }}" class="toggle-btn {% if period == 'daily' %}active{% endif %}">Daily</a>
+                            <a href="{{ url_for(endpoint + '.weekly') }}" class="toggle-btn {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+                            <a href="{{ url_for(endpoint + '.monthly') }}" class="toggle-btn {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+                            <a href="{{ url_for(endpoint + '.six_months') }}" class="toggle-btn {% if period == 'six_months' %}active{% endif %}">6 Months</a>
+                            <a href="{{ url_for(endpoint + '.yearly') }}" class="toggle-btn {% if period == 'yearly' %}active{% endif %}">Yearly</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Steps Chart -->
+                    <div class="chart-container" style="position: relative; height:250px; margin-bottom: 30px;">
+                        <canvas id="stepsChart"></canvas>
+                    </div>
+                    
+                    <!-- Distance Chart -->
+                    <div class="chart-container" style="position: relative; height:250px; margin-bottom: 30px;">
+                        <canvas id="distanceChart"></canvas>
+                    </div>
+                    
+                    <!-- Calories Chart -->
+                    <div class="chart-container" style="position: relative; height:250px;">
+                        <canvas id="caloriesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get data from server
+    var chartData = {{ data|tojson }};
+    var labels = chartData.labels;
+    
+    // Get datasets
+    var stepsDataset = null;
+    var distanceDataset = null;
+    var caloriesDataset = null;
+    
+    // Categorize datasets by label
+    for (var i = 0; i < chartData.datasets.length; i++) {
+        var dataset = chartData.datasets[i];
+        if (dataset.label.indexOf('Steps') !== -1) {
+            stepsDataset = dataset;
+        } else if (dataset.label.indexOf('Distance') !== -1) {
+            distanceDataset = dataset;
+        } else if (dataset.label.indexOf('Calories') !== -1) {
+            caloriesDataset = dataset;
+        }
+    }
+    
+    // Set chart title based on period
+    var periodTitle = '{{ period|capitalize }}';
+    if (periodTitle === 'Six_months') {
+        periodTitle = '6-Month Average';
+    } else if (periodTitle === 'Daily') {
+        periodTitle = 'Daily';
+    } else {
+        periodTitle += ' Average';
+    }
+    
+    // Function to detect if sparse labels are being used
+    function hasSparseLabels() {
+        // If data has labels and at least one empty label, consider it sparse
+        return chartData.labels && chartData.labels.some(function(label) { return label === ''; });
+    }
+    
+    // Check if we're using sparse labels
+    var usingSparseLabels = hasSparseLabels();
+    
+    // Create Steps Chart
+    var stepsCtx = document.getElementById('stepsChart').getContext('2d');
+    new Chart(stepsCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [stepsDataset]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Steps'
+                    }
+                },
+                x: {
+                    ticks: {
+                        // Display all labels horizontally (no rotation)
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: periodTitle + ' Steps'
+                }
+            }
+        }
+    });
+    
+    // Create Distance Chart
+    var distanceCtx = document.getElementById('distanceChart').getContext('2d');
+    new Chart(distanceCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [distanceDataset]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: periodTitle + ' Distance'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                }
+            }
+        }
+    });
+    
+    // Create Calories Chart
+    var caloriesCtx = document.getElementById('caloriesChart').getContext('2d');
+    new Chart(caloriesCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [caloriesDataset]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: periodTitle + ' Calories Burned'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: {
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Access Logs{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-history me-2"></i> Access Logs</h1>
+        <a href="{{ url_for('share.edit_share', share_id=share_link.id) }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> Back to Share
+        </a>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Share: {{ share_link.name }}</h5>
+                <span class="badge {% if share_link.is_expired %}bg-danger{% else %}bg-success{% endif %}">
+                    {% if share_link.is_expired %}
+                        Expired
+                    {% else %}
+                        Active
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Created:</strong> {{ share_link.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Expiry:</strong> {{ share_link.expires_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>URL:</strong> <span class="text-truncate d-inline-block" style="max-width: 300px;">{{ share_link.share_url }}</span></p>
+                </div>
+                <div class="col-md-6">
+                    <p>
+                        <strong>Password Protected:</strong> 
+                        {% if share_link.is_password_protected %}
+                            <i class="fas fa-lock text-success"></i> Yes
+                            {% if share_link.one_time_password %}
+                                <span class="badge bg-info ms-1">One-time password</span>
+                                {% if share_link.password_used %}
+                                    <span class="badge bg-warning ms-1">Used</span>
+                                {% else %}
+                                    <span class="badge bg-success ms-1">Not used</span>
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <i class="fas fa-unlock text-warning"></i> No
+                        {% endif %}
+                    </p>
+                    <p><strong>Total Views:</strong> {{ share_link.access_count }}</p>
+                    <p>
+                        <strong>Last Accessed:</strong> 
+                        {% if share_link.last_accessed %}
+                            {{ share_link.last_accessed.strftime('%Y-%m-%d %H:%M') }}
+                        {% else %}
+                            Never
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Detailed Access Logs</h5>
+        </div>
+        {% if logs %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Access Type</th>
+                        <th>Status</th>
+                        <th>IP Address</th>
+                        <th>Browser</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.accessed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            {% if log.access_type == 'view' %}
+                                <span class="badge bg-primary">View</span>
+                            {% elif log.access_type == 'pdf_export' %}
+                                <span class="badge bg-info">PDF Export</span>
+                            {% elif log.access_type == 'password_required' %}
+                                <span class="badge bg-warning">Password Prompt</span>
+                            {% elif log.access_type == 'password_success' %}
+                                <span class="badge bg-success">Password Success</span>
+                            {% elif log.access_type == 'password_failed' %}
+                                <span class="badge bg-danger">Password Failed</span>
+                            {% elif log.access_type == 'expired' %}
+                                <span class="badge bg-secondary">Expired Access</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ log.access_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if log.successful %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> Success</span>
+                            {% else %}
+                                <span class="text-danger"><i class="fas fa-times-circle"></i> Failed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ log.ip_address or 'N/A' }}</td>
+                        <td>
+                            <span class="text-truncate d-inline-block" style="max-width: 250px;">
+                                {{ log.user_agent or 'Unknown' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="card-body">
+            <div class="alert alert-info mb-0">
+                <i class="fas fa-info-circle me-2"></i> No access logs available for this share link yet.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if logs %}
+    <div class="mt-4">
+        <div class="alert alert-secondary">
+            <i class="fas fa-shield-alt me-2"></i> <strong>Security Tip:</strong> 
+            If you notice any suspicious access patterns or unauthorized access attempts, consider deleting this share link and creating a new one with a different password.
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

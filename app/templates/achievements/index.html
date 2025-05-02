@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}Achievements{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>My Achievements</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('achievements.check') }}" class="btn btn-primary">
+                <i class="fas fa-sync"></i> Check for New Achievements
+            </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('achievements.admin_index') }}" class="btn btn-danger">
+                <i class="fas fa-cog"></i> Manage Achievements
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Achievement Categories -->
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <!-- Category List -->
+            <div class="menu-container">
+                <div class="menu-header">Achievement Categories</div>
+                {% for category_key, category in categories.items() %}
+                    <a href="#{{ category_key }}" class="menu-item d-flex justify-content-between align-items-center">
+                        {{ category.name }}
+                        <span class="badge bg-primary rounded-pill">
+                            {{ category.achievements|selectattr('earned', 'eq', true)|list|length }}/{{ category.achievements|length }}
+                        </span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            {% for category_key, category in categories.items() %}
+                <div id="{{ category_key }}" class="card mb-4 shadow-sm">
+                    <div class="card-header {% if category_key == 'steps' %}bg-activity{% elif category_key == 'weight' %}bg-weight{% elif category_key == 'sleep' %}bg-sleep{% elif category_key == 'heart_rate' %}bg-heart-rate{% else %}bg-primary{% endif %} text-white">
+                        <h4 class="mb-0">{{ category.name }} Achievements</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for achievement_data in category.achievements %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="achievement-card {{ achievement_data.achievement.level }} {% if not achievement_data.earned %}locked{% endif %}">
+                                        <div class="card-header">
+                                            <h5 class="mb-0">
+                                                {% if achievement_data.earned %}
+                                                    <i class="fas fa-trophy me-2"></i>
+                                                {% else %}
+                                                    <i class="fas fa-lock me-2"></i>
+                                                {% endif %}
+                                                {{ achievement_data.achievement.level|capitalize }}
+                                            </h5>
+                                        </div>
+                                        <div class="card-body text-center">
+                                            <div class="achievement-icon-container">
+                                                <i class="achievement-icon fas fa-{{ achievement_data.achievement.icon|default('medal') }}"></i>
+                                            </div>
+                                            <h5 class="achievement-title">{{ achievement_data.achievement.name }}</h5>
+                                            <p class="achievement-description">{{ achievement_data.achievement.description }}</p>
+                                            
+                                            {% if achievement_data.earned %}
+                                                <div class="achievement-earned-badge">
+                                                    <i class="fas fa-check-circle me-1"></i> 
+                                                    Earned
+                                                </div>
+                                            {% else %}
+                                                <div class="achievement-locked-badge">
+                                                    <i class="fas fa-lock me-1"></i>
+                                                    Locked
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="achievement-footer">
+                                            {% if achievement_data.earned %}
+                                                <small>
+                                                    Earned on {{ achievement_data.earned_date.strftime('%Y-%m-%d') }}
+                                                </small>
+                                            {% else %}
+                                                <small>Keep going to unlock!</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Steps Progress{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Steps Progress</h1>
+        <div>
+            {% if suggested_goal %}
+            <a href="{{ url_for('goals.from_progress', category='steps', baseline=average_steps, target=suggested_goal) }}" class="btn btn-success">
+                <i class="fas fa-bullseye"></i> Set Goal ({{ suggested_goal }} steps/day)
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Daily Steps (Last 30 Days)</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="stepsChart" width="400" height="200"></canvas>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong>Average:</strong> {{ average_steps|round|int }} steps/day
+                        </div>
+                        <div>
+                            <strong>Goal:</strong> 10,000 steps/day
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Activity Breakdown</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Sedentary (< 5,000 steps)
+                            <span class="badge bg-danger">Unhealthy</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Low Active (5,000-7,499 steps)
+                            <span class="badge bg-warning">Minimal</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Somewhat Active (7,500-9,999 steps)
+                            <span class="badge bg-info">Good</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Active (10,000-12,499 steps)
+                            <span class="badge bg-success">Very Good</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Highly Active (≥ 12,500 steps)
+                            <span class="badge bg-primary">Excellent</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header">Benefits of Walking</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Maintains healthy weight</li>
+                        <li class="list-group-item">Strengthens bones and muscles</li>
+                        <li class="list-group-item">Improves cardiovascular fitness</li>
+                        <li class="list-group-item">Enhances mood and mental well-being</li>
+                        <li class="list-group-item">Reduces risk of chronic diseases</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('stepsChart').getContext('2d');
+    
+    // Parse steps data from server
+    const stepsData = {{ steps_data|tojson }};
+    
+    // Prepare data for the chart
+    const labels = stepsData.map(data => data.date).reverse();
+    const data = stepsData.map(data => data.steps).reverse();
+    
+    // Create chart
+    const stepsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Daily Steps',
+                data: data,
+                backgroundColor: function(context) {
+                    const value = context.dataset.data[context.dataIndex];
+                    if (value >= 12500) return 'rgba(54, 162, 235, 0.7)'; // Highly Active
+                    else if (value >= 10000) return 'rgba(75, 192, 192, 0.7)'; // Active
+                    else if (value >= 7500) return 'rgba(153, 102, 255, 0.7)'; // Somewhat Active
+                    else if (value >= 5000) return 'rgba(255, 206, 86, 0.7)'; // Low Active
+                    else return 'rgba(255, 99, 132, 0.7)'; // Sedentary
+                },
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Steps'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y.toLocaleString() + ' steps';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %} 

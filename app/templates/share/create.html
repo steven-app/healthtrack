@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+
+{% block title %}Create Share Link{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Create Share Link</h1>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Share Your Health Data</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('share.create_share') }}">
+                {{ form.csrf_token }}
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name(class="form-control") }}
+                        {% if form.name.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.name.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">Name this share to help you remember who it's for</small>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="template_type" class="form-label">{{ form.template_type.label }}</label>
+                        {{ form.template_type(class="form-select") }}
+                        {% if form.template_type.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.template_type.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">Choose a template that best fits your sharing purpose</small>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="date_range_start" class="form-label">{{ form.date_range_start.label }}</label>
+                        {{ form.date_range_start(class="form-control", type="date") }}
+                        {% if form.date_range_start.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.date_range_start.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="date_range_end" class="form-label">{{ form.date_range_end.label }}</label>
+                        {{ form.date_range_end(class="form-control", type="date") }}
+                        {% if form.date_range_end.errors %}
+                        <div class="text-danger mt-1">
+                            {% for error in form.date_range_end.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <div class="form-check mb-2 mt-4">
+                            {{ form.never_expire(class="form-check-input") }}
+                            <label class="form-check-label" for="never_expire">
+                                {{ form.never_expire.label }}
+                            </label>
+                            <small class="text-muted d-block">When checked, the share link will never expire.</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div id="expiry-days-container" {% if form.never_expire.data %}style="display:none;"{% endif %}>
+                            <label for="expiry_days" class="form-label">{{ form.expiry_days.label }}</label>
+                            {{ form.expiry_days(class="form-control") }}
+                            {% if form.expiry_days.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.expiry_days.errors %}
+                                <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6" id="password-protection-container">
+                        <div class="form-check mb-2">
+                            {{ form.password_protect(class="form-check-input", id="password_protect") }}
+                            <label class="form-check-label" for="password_protect">
+                                {{ form.password_protect.label }}
+                            </label>
+                        </div>
+                        
+                        <div id="password-fields" {% if not form.password_protect.data %}style="display:none;"{% endif %}>
+                            <div class="form-check mb-2 ms-4">
+                                {{ form.one_time_password(class="form-check-input", id="one_time_password") }}
+                                <label class="form-check-label" for="one_time_password">
+                                    {{ form.one_time_password.label }}
+                                </label>
+                                <small class="text-muted d-block">A random 4-digit password will be generated automatically.</small>
+                            </div>
+                            
+                            <div class="mb-3 ms-4" id="manual-password-field">
+                                <label for="password" class="form-label">{{ form.password.label }}</label>
+                                {{ form.password(class="form-control") }}
+                                {% if form.password.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.password.errors %}
+                                    <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Privacy Settings</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Choose which types of data to include in this share:</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_weight(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_weight">
+                                        {{ form.show_weight.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_heart_rate(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_heart_rate">
+                                        {{ form.show_heart_rate.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_activity(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_activity">
+                                        {{ form.show_activity.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_sleep(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_sleep">
+                                        {{ form.show_sleep.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_goals(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_goals">
+                                        {{ form.show_goals.label }}
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    {{ form.show_achievements(class="form-check-input") }}
+                                    <label class="form-check-label" for="show_achievements">
+                                        {{ form.show_achievements.label }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('share.manage') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Manage
+                    </a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Share Tips</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li><strong>Choose dates carefully</strong> - Only include data relevant to your sharing purpose.</li>
+                <li><strong>Set appropriate expiry</strong> - Shorter periods are more secure.</li>
+                <li><strong>Consider privacy</strong> - Only share data categories necessary for your purpose.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update template description based on selection
+    const templateSelect = document.getElementById('template_type');
+    const updateTemplateDescription = () => {
+        const templateDescription = document.querySelector('.template-description');
+        if (templateDescription) {
+            if (templateSelect.value === 'social') {
+                templateDescription.textContent = 'For sharing with friends and family. Emphasizes achievements and progress.';
+            } else {
+                templateDescription.textContent = 'For healthcare providers. Shows detailed health metrics and trends.';
+            }
+        }
+    };
+    
+    if (templateSelect) {
+        updateTemplateDescription();
+        templateSelect.addEventListener('change', updateTemplateDescription);
+    }
+    
+    // Handle never expire checkbox
+    const neverExpireCheckbox = document.getElementById('never_expire');
+    const expiryDaysContainer = document.getElementById('expiry-days-container');
+    
+    if (neverExpireCheckbox && expiryDaysContainer) {
+        neverExpireCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                expiryDaysContainer.style.display = 'none';
+            } else {
+                expiryDaysContainer.style.display = 'block';
+            }
+        });
+    }
+    
+    // Handle password protection checkbox
+    const passwordProtectCheckbox = document.getElementById('password_protect');
+    const passwordFields = document.getElementById('password-fields');
+    const oneTimePasswordCheckbox = document.getElementById('one_time_password');
+    const manualPasswordField = document.getElementById('manual-password-field');
+    
+    if (passwordProtectCheckbox && passwordFields) {
+        passwordProtectCheckbox.addEventListener('change', function() {
+            passwordFields.style.display = this.checked ? 'block' : 'none';
+        });
+    }
+    
+    if (oneTimePasswordCheckbox && manualPasswordField) {
+        oneTimePasswordCheckbox.addEventListener('change', function() {
+            manualPasswordField.style.display = this.checked ? 'none' : 'block';
+        });
+        
+        // Initial state
+        if (oneTimePasswordCheckbox.checked) {
+            manualPasswordField.style.display = 'none';
+        }
+    }
+});
+</script>
+{% endblock %} 

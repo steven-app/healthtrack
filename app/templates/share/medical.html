@@ -1,0 +1,798 @@
+{% extends "share/base_share.html" %}
+
+{% block title %}Medical Report - {{ user.get_full_name() }}{% endblock %}
+
+{% block head_extras %}
+<style>
+    .health-metric {
+        border-radius: 0.5rem;
+        box-shadow: 0 0.15rem 1.75rem rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        background-color: white;
+        height: 100%; /* 确保所有卡片高度一致 */
+        display: flex;
+        flex-direction: column;
+    }
+    .health-metric-header {
+        background-color: #1cc88a;
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+    }
+    .health-metric-body {
+        padding: 1.5rem;
+        flex: 1; /* 让内容部分填充剩余空间 */
+        display: flex;
+        flex-direction: column;
+    }
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #5a5c69;
+    }
+    .metric-label {
+        color: #858796;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+    .chart-container {
+        height: 300px;
+        margin-bottom: 1.5rem;
+    }
+    .summary-table th {
+        width: 40%;
+    }
+    .medical-disclaimer {
+        font-size: 0.8rem;
+        color: #858796;
+        padding: 1rem;
+        border: 1px solid #e3e6f0;
+        border-radius: 0.5rem;
+        margin-top: 2rem;
+    }
+    .health-table {
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Patient Info -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0"><i class="fas fa-user-md me-2"></i>Patient Information</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>Name:</th>
+                            <td>{{ user.first_name }} {{ user.last_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Gender:</th>
+                            <td>{{ user.gender|capitalize if user.gender else 'Not specified' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Birth Date:</th>
+                            <td>{{ user.birth_date.strftime('%Y-%m-%d') if user.birth_date else 'Not specified' }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th>Height:</th>
+                            <td>{{ user.height }} cm</td>
+                        </tr>
+                        <tr>
+                            <th>Weight:</th>
+                            <td>{{ data.summary.weight.latest }} kg</td>
+                        </tr>
+                        <tr>
+                            <th>Report Date:</th>
+                            <td>{{ share_link.created_at.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Vital Signs -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0"><i class="fas fa-heartbeat me-2"></i>Vital Signs</h4>
+        </div>
+        <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% if share_link.show_heart_rate %}
+                <div class="col d-flex">
+                    <div class="health-metric w-100">
+                        <div class="health-metric-header">
+                            <h5 class="mb-0">Heart Rate</h5>
+                        </div>
+                        <div class="health-metric-body">
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.heart_rate.min|int }}</div>
+                                    <div class="metric-label">Minimum</div>
+                                </div>
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.heart_rate.avg|int }}</div>
+                                    <div class="metric-label">Average</div>
+                                </div>
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.heart_rate.max|int }}</div>
+                                    <div class="metric-label">Maximum</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <p class="mb-1 small">Heart Rate Range (bpm):</p>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                        Rest (&lt;70)
+                                    </div>
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                        Fat Burn (70-100)
+                                    </div>
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                        Cardio (100-140)
+                                    </div>
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                        Peak (&gt;140)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if share_link.show_weight %}
+                <div class="col d-flex">
+                    <div class="health-metric w-100">
+                        <div class="health-metric-header">
+                            <h5 class="mb-0">Weight</h5>
+                        </div>
+                        <div class="health-metric-body">
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.weight.latest }}</div>
+                                    <div class="metric-label">Current (kg)</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                {% if user.height and data.weights and data.weights|length > 0 %}
+                                    {% set bmi = data.weights[0].weight / ((user.height / 100) ** 2) %}
+                                    <p class="mb-1 small">BMI: {{ bmi|round(1) }}</p>
+                                    <div class="progress mb-3">
+                                        <div class="progress-bar {% if bmi < 18.5 %}bg-warning{% elif bmi < 25 %}bg-success{% elif bmi < 30 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                            role="progressbar" 
+                                            style="width: 100%" 
+                                            aria-valuenow="100" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">
+                                            {% if bmi < 18.5 %}
+                                                Underweight
+                                            {% elif bmi < 25 %}
+                                                Normal
+                                            {% elif bmi < 30 %}
+                                                Overweight
+                                            {% else %}
+                                                Obese
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <p class="mb-1 small">Weight Classification (BMI):</p>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Underweight (&lt;18.5)
+                                        </div>
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Normal (18.5-24.9)
+                                        </div>
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Overweight (25-29.9)
+                                        </div>
+                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Obese (≥30)
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">Height or weight data not available for BMI calculation</p>
+                                    <p class="mb-1 small">Weight Classification (BMI):</p>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Underweight (&lt;18.5)
+                                        </div>
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Normal (18.5-24.9)
+                                        </div>
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Overweight (25-29.9)
+                                        </div>
+                                        <div class="progress-bar bg-danger" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                            Obese (≥30)
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if share_link.show_sleep %}
+                <div class="col d-flex">
+                    <div class="health-metric w-100">
+                        <div class="health-metric-header">
+                            <h5 class="mb-0">Sleep</h5>
+                        </div>
+                        <div class="health-metric-body">
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.sleep.avg_duration_hours|round(1) }}</div>
+                                    <div class="metric-label">Average (hours)</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <p class="mb-1 small">Sleep Quality Assessment:</p>
+                                <div class="progress">
+                                    {% set sleep_hours = data.summary.sleep.avg_duration_hours %}
+                                    <div class="progress-bar 
+                                        {% if sleep_hours is none %}bg-light{% elif sleep_hours < 6 %}bg-danger{% elif sleep_hours < 7 %}bg-warning{% elif sleep_hours < 9 %}bg-success{% else %}bg-warning{% endif %}" 
+                                        role="progressbar" 
+                                        style="width: 100%" 
+                                        aria-valuenow="100" 
+                                        aria-valuemin="0" 
+                                        aria-valuemax="100">
+                                        {% if sleep_hours is none %}
+                                            No Data
+                                        {% elif sleep_hours < 6 %}
+                                            Insufficient
+                                        {% elif sleep_hours < 7 %}
+                                            Below Optimal
+                                        {% elif sleep_hours < 9 %}
+                                            Optimal
+                                        {% else %}
+                                            Above Optimal
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if share_link.show_activity %}
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <div class="health-metric">
+                        <div class="health-metric-header">
+                            <h5 class="mb-0">Physical Activity</h5>
+                        </div>
+                        <div class="health-metric-body">
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.activity.avg_steps|int }}</div>
+                                    <div class="metric-label">Average Steps</div>
+                                </div>
+                                <div class="col">
+                                    <div class="metric-value">{{ data.summary.activity.total_steps|int }}</div>
+                                    <div class="metric-label">Total Steps</div>
+                                </div>
+                                <div class="col">
+                                    {% set avg_steps = data.summary.activity.avg_steps|int %}
+                                    {% set activity_level = 'Sedentary' if avg_steps < 5000 
+                                                            else 'Low Active' if avg_steps < 7500 
+                                                            else 'Somewhat Active' if avg_steps < 10000 
+                                                            else 'Active' if avg_steps < 12500 
+                                                            else 'Highly Active' %}
+                                    <div class="metric-value">{{ activity_level }}</div>
+                                    <div class="metric-label">Activity Level</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Health Data Details -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i>Health Data Analytics</h4>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="healthDataTabs" role="tablist">
+                {% if share_link.show_heart_rate %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="heart-rate-tab" data-bs-toggle="tab" data-bs-target="#heart-rate" type="button" role="tab" aria-controls="heart-rate" aria-selected="true">Heart Rate</button>
+                </li>
+                {% endif %}
+                
+                {% if share_link.show_weight %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not share_link.show_heart_rate %}active{% endif %}" id="weight-tab" data-bs-toggle="tab" data-bs-target="#weight" type="button" role="tab" aria-controls="weight" aria-selected="false">Weight</button>
+                </li>
+                {% endif %}
+                
+                {% if share_link.show_sleep %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not share_link.show_heart_rate and not share_link.show_weight %}active{% endif %}" id="sleep-tab" data-bs-toggle="tab" data-bs-target="#sleep" type="button" role="tab" aria-controls="sleep" aria-selected="false">Sleep</button>
+                </li>
+                {% endif %}
+                
+                {% if share_link.show_activity %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if not share_link.show_heart_rate and not share_link.show_weight and not share_link.show_sleep %}active{% endif %}" id="activity-tab" data-bs-toggle="tab" data-bs-target="#activity" type="button" role="tab" aria-controls="activity" aria-selected="false">Activity</button>
+                </li>
+                {% endif %}
+            </ul>
+            
+            <div class="tab-content mt-4" id="healthDataTabContent">
+                {% if share_link.show_heart_rate and data.heart_rates|length > 0 %}
+                <div class="tab-pane fade show active" id="heart-rate" role="tabpanel" aria-labelledby="heart-rate-tab">
+                    <div class="chart-container">
+                        <canvas id="heartRateChart"></canvas>
+                    </div>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered table-striped health-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'Hour' if group_by == 'hour' else 'Date' }}</th>
+                                    <th>Min BPM</th>
+                                    <th>Max BPM</th>
+                                    <th>Avg BPM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for hr in data.heart_rates %}
+                                <tr>
+                                    <td>{{ hr.date }}</td>
+                                    <td>{{ hr.min_heart_rate }}</td>
+                                    <td>{{ hr.max_heart_rate }}</td>
+                                    <td>{{ hr.avg_heart_rate }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% elif share_link.show_heart_rate %}
+                    <div class="text-center p-5 text-muted">No heart rate data available</div>
+                {% endif %}
+                
+                {% if share_link.show_weight and data.weights|length > 0 %}
+                <div class="tab-pane fade {% if not share_link.show_heart_rate %}show active{% endif %}" id="weight" role="tabpanel" aria-labelledby="weight-tab">
+                    <div class="chart-container">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered table-striped health-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'Hour' if group_by == 'hour' else 'Date' }}</th>
+                                    <th>Weight (kg)</th>
+                                    <th>BMI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for w in data.weights %}
+                                <tr>
+                                    <td>{{ w.date }}</td>
+                                    <td>{{ w.weight }}</td>
+                                    <td>{{ (w.weight / ((user.height / 100) ** 2))|round(1) if user.height else 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% elif share_link.show_weight %}
+                    <div class="text-center p-5 text-muted">No weight data available</div>
+                {% endif %}
+                
+                {% if share_link.show_sleep and data.sleeps|length > 0 %}
+                <div class="tab-pane fade {% if not share_link.show_heart_rate and not share_link.show_weight %}show active{% endif %}" id="sleep" role="tabpanel" aria-labelledby="sleep-tab">
+                    <div class="chart-container">
+                        <canvas id="sleepChart"></canvas>
+                    </div>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered table-striped health-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'Hour' if group_by == 'hour' else 'Date' }}</th>
+                                    <th>Duration (hours)</th>
+                                    <th>Quality</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in data.sleeps %}
+                                <tr>
+                                    <td>{{ s.date }}</td>
+                                    <td>{{ s.duration }}</td>
+                                    <td>
+                                        {% if s.duration is none %}
+                                            N/A
+                                        {% elif s.duration < 6 %}
+                                            Poor
+                                        {% elif s.duration < 7 %}
+                                            Fair
+                                        {% elif s.duration < 9 %}
+                                            Good
+                                        {% else %}
+                                            Excellent
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% elif share_link.show_sleep %}
+                    <div class="text-center p-5 text-muted">No sleep data available</div>
+                {% endif %}
+                
+                {% if share_link.show_activity and data.activities|length > 0 %}
+                <div class="tab-pane fade {% if not share_link.show_heart_rate and not share_link.show_weight and not share_link.show_sleep %}show active{% endif %}" id="activity" role="tabpanel" aria-labelledby="activity-tab">
+                    <div class="chart-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                    
+                    <div class="table-responsive mt-4">
+                        <table class="table table-bordered table-striped health-table">
+                            <thead>
+                                <tr>
+                                    <th>{{ 'Hour' if group_by == 'hour' else 'Date' }}</th>
+                                    <th>Steps</th>
+                                    <th>Activity Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for a in data.activities %}
+                                <tr>
+                                    <td>{{ a.date }}</td>
+                                    <td>{{ a.steps if a.steps is not none else 'N/A' }}</td>
+                                    <td>
+                                        {% if a.steps is none %}
+                                            N/A
+                                        {% elif a.steps < 5000 %}
+                                            Sedentary
+                                        {% elif a.steps < 7500 %}
+                                            Low Active
+                                        {% elif a.steps < 10000 %}
+                                            Somewhat Active
+                                        {% elif a.steps < 12500 %}
+                                            Active
+                                        {% else %}
+                                            Highly Active
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% elif share_link.show_activity %}
+                    <div class="text-center p-5 text-muted">No activity data available</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="medical-disclaimer">
+        <strong>Disclaimer:</strong> This health report is generated from user-tracked data and is intended for informational purposes only. 
+        It is not a substitute for professional medical advice, diagnosis, or treatment. Always seek the advice of your physician or other 
+        qualified health provider with any questions you may have regarding a medical condition.
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var xLabel = '{{ 'Hour' if group_by == 'hour' else 'Date' }}';
+        // Prepare date range for full x-axis
+        const startDate = new Date('{{ share_link.date_range_start.strftime('%Y-%m-%d') }}');
+        const endDate = new Date('{{ share_link.date_range_end.strftime('%Y-%m-%d') }}');
+        function getDateArray(start, end) {
+            const arr = [];
+            let dt = new Date(start);
+            while (dt <= end) {
+                arr.push(dt.toISOString().slice(0, 10));
+                dt.setDate(dt.getDate() + 1);
+            }
+            return arr;
+        }
+        const fullLabels = getDateArray(startDate, endDate);
+        {% if share_link.show_heart_rate and data.heart_rates|length > 0 %}
+            // Heart Rate Chart
+            const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
+            const heartRateData = {{ data.heart_rates|tojson }};
+            // Sort and map data by date
+            const dataMap = {};
+            heartRateData.forEach(function(item) {
+                dataMap[item.date] = item.avg_heart_rate;
+            });
+            const hrLabels = fullLabels;
+            const hrValues = hrLabels.map(date => dataMap[date] !== undefined ? dataMap[date] : null);
+            new Chart(heartRateCtx, {
+                type: 'line',
+                data: {
+                    labels: hrLabels,
+                    datasets: [{
+                        label: 'Heart Rate (BPM)',
+                        data: hrValues,
+                        backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                        borderColor: 'rgba(78, 115, 223, 1)',
+                        borderWidth: 2,
+                        tension: 0.1,
+                        spanGaps: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'BPM'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: xLabel
+                            },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 10
+                            }
+                        }
+                    }
+                }
+            });
+        {% elif share_link.show_heart_rate %}
+            // No heart rate data available, show message in the tab
+            const heartRateContainer = document.getElementById('heart-rate');
+            if (heartRateContainer) {
+                const chartContainer = heartRateContainer.querySelector('.chart-container');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<div class="text-center p-5 text-muted">No heart rate data available</div>';
+                }
+            }
+        {% endif %}
+        
+        {% if share_link.show_weight and data.weights|length > 0 %}
+        // Weight Chart
+        const weightCtx = document.getElementById('weightChart').getContext('2d');
+        const weightData = {{ data.weights|tojson }};
+        // Sort and map data by date
+        const weightMap = {};
+        weightData.forEach(function(item) {
+            weightMap[item.date] = item.weight;
+        });
+        const weightLabels = fullLabels;
+        const weightValues = weightLabels.map(date => weightMap[date] !== undefined ? weightMap[date] : null);
+        new Chart(weightCtx, {
+            type: 'line',
+            data: {
+                labels: weightLabels,
+                datasets: [{
+                    label: 'Weight (kg)',
+                    data: weightValues,
+                    backgroundColor: 'rgba(28, 200, 138, 0.2)',
+                    borderColor: 'rgba(28, 200, 138, 1)',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'kg'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: xLabel
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+        {% elif share_link.show_weight %}
+            // No weight data available, show message in the tab
+            const weightContainer = document.getElementById('weight');
+            if (weightContainer) {
+                const chartContainer = weightContainer.querySelector('.chart-container');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<div class="text-center p-5 text-muted">No weight data available</div>';
+                }
+            }
+        {% endif %}
+        
+        {% if share_link.show_sleep and data.sleeps|length > 0 %}
+        // Sleep Chart
+        const sleepCtx = document.getElementById('sleepChart').getContext('2d');
+        const sleepData = {{ data.sleeps|tojson }};
+        // Sort and map data by date
+        const sleepMap = {};
+        sleepData.forEach(function(item) {
+            sleepMap[item.date] = item.duration;
+        });
+        const sleepLabels = fullLabels;
+        const sleepValues = sleepLabels.map(date => sleepMap[date] !== undefined ? sleepMap[date] : null);
+        new Chart(sleepCtx, {
+            type: 'bar',
+            data: {
+                labels: sleepLabels,
+                datasets: [{
+                    label: 'Sleep Duration (hours)',
+                    data: sleepValues,
+                    backgroundColor: 'rgba(54, 185, 204, 0.7)',
+                    borderColor: 'rgba(54, 185, 204, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: xLabel
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+        {% elif share_link.show_sleep %}
+            // No sleep data available, show message in the tab
+            const sleepContainer = document.getElementById('sleep');
+            if (sleepContainer) {
+                const chartContainer = sleepContainer.querySelector('.chart-container');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<div class="text-center p-5 text-muted">No sleep data available</div>';
+                }
+            }
+        {% endif %}
+        
+        {% if share_link.show_activity and data.activities|length > 0 %}
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        const activityData = {{ data.activities|tojson }};
+        // Sort and map data by date
+        const activityMap = {};
+        activityData.forEach(function(item) {
+            activityMap[item.date] = item.steps;
+        });
+        const activityLabels = fullLabels;
+        const activityValues = activityLabels.map(date => activityMap[date] !== undefined ? activityMap[date] : null);
+        new Chart(activityCtx, {
+            type: 'bar',
+            data: {
+                labels: activityLabels,
+                datasets: [{
+                    label: 'Steps',
+                    data: activityValues,
+                    backgroundColor: 'rgba(246, 194, 62, 0.7)',
+                    borderColor: 'rgba(246, 194, 62, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Steps'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: xLabel
+                        },
+                        ticks: {
+                            autoSkip: true,
+                            maxTicksLimit: 10
+                        }
+                    }
+                }
+            }
+        });
+        {% elif share_link.show_activity %}
+            // No activity data available, show message in the tab
+            const activityContainer = document.getElementById('activity');
+            if (activityContainer) {
+                const chartContainer = activityContainer.querySelector('.chart-container');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<div class="text-center p-5 text-muted">No activity data available</div>';
+                }
+            }
+        {% endif %}
+        
+        // Modify the tab navigation to show the first available tab with data
+        const tabList = document.querySelectorAll('#healthDataTabs .nav-link');
+        if (tabList.length > 0) {
+            let foundActiveTab = false;
+            
+            // Check if there is already an active tab
+            for (let i = 0; i < tabList.length; i++) {
+                if (tabList[i].classList.contains('active')) {
+                    foundActiveTab = true;
+                    break;
+                }
+            }
+            
+            // If no active tab, activate the first one
+            if (!foundActiveTab && tabList.length > 0) {
+                // Remove active class from all tabs and content
+                document.querySelectorAll('#healthDataTabContent .tab-pane').forEach(function(pane) {
+                    pane.classList.remove('show', 'active');
+                });
+                
+                tabList.forEach(function(tab) {
+                    tab.classList.remove('active');
+                    tab.setAttribute('aria-selected', 'false');
+                });
+                
+                // Activate the first tab
+                tabList[0].classList.add('active');
+                tabList[0].setAttribute('aria-selected', 'true');
+                
+                // Get the target content and activate it
+                const firstTabTarget = tabList[0].getAttribute('data-bs-target').substring(1);
+                const firstTabContent = document.getElementById(firstTabTarget);
+                if (firstTabContent) {
+                    firstTabContent.classList.add('show', 'active');
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 

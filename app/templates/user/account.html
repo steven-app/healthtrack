@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- User menu sidebar -->
+        <div class="col-md-3">
+            <div class="menu-container">
+                <div class="menu-header">Account Management</div>
+                <a href="{{ url_for('user.profile') }}" class="menu-item">Profile</a>
+                <a href="{{ url_for('user.change_password') }}" class="menu-item">Change Password</a>
+                <a href="{{ url_for('user.account') }}" class="menu-item active">Account Settings</a>
+                <a href="{{ url_for('user.export_data') }}" class="menu-item">Export Data</a>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Email Settings</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('user.account') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            {{ form.email(class="form-control", id="email") }}
+                            {% if form.email.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.email.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.confirm_email(class="form-check-input", id="confirm_email") }}
+                            <label class="form-check-label" for="confirm_email">
+                                {{ form.confirm_email.label.text }}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.submit_email(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">Delete Account</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Warning: Account deletion is permanent. All your data will be lost.
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('user.account') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3 form-check">
+                            {{ form.delete_account(class="form-check-input", id="delete_account") }}
+                            <label class="form-check-label" for="delete_account">
+                                {{ form.delete_account.label.text }}
+                            </label>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="delete_confirmation" class="form-label">Confirmation</label>
+                            {{ form.delete_confirmation(class="form-control", id="delete_confirmation", placeholder='Type "DELETE" to confirm') }}
+                            {% if form.delete_confirmation.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.delete_confirmation.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.submit_delete(class="btn btn-danger") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

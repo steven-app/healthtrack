@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Error{% endblock %}
+
+{% block content %}
+<div class="container mt-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0"><i class="fas fa-exclamation-circle me-2"></i> Error</h3>
+                </div>
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-times-circle text-danger fa-5x mb-3"></i>
+                        <h4>An Error Occurred</h4>
+                        <p class="text-muted">
+                            We encountered a problem while trying to process your request.
+                        </p>
+                    </div>
+                    
+                    <div class="alert alert-secondary">
+                        <p class="mb-0">
+                            <strong>Error Details:</strong><br>
+                            {{ error }}
+                        </p>
+                    </div>
+                    
+                    <p>Please try again later or contact support if the problem persists.</p>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                        <i class="fas fa-home me-2"></i> Go to Homepage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

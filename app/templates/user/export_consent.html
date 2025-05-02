@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Export Consent{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- User menu sidebar -->
+        <div class="col-md-3">
+            <div class="menu-container">
+                <div class="menu-header">Account Management</div>
+                <a href="{{ url_for('user.profile') }}" class="menu-item">Profile</a>
+                <a href="{{ url_for('user.change_password') }}" class="menu-item">Change Password</a>
+                <a href="{{ url_for('user.account') }}" class="menu-item">Account Settings</a>
+                <a href="{{ url_for('user.export_data') }}" class="menu-item active">Export Data</a>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Data Export Consent</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <p><i class="fas fa-info-circle me-2"></i> You are about to export all your health data. This export will include all information you've entered into the HealthTrack system.</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('user.export_data') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.confirm_export(class="form-check-input") }}
+                                {{ form.confirm_export.label(class="form-check-label") }}
+                                {% if form.confirm_export.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.confirm_export.errors %}
+                                    <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('user.profile') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

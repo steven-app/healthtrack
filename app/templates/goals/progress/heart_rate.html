@@ -1,0 +1,388 @@
+{% extends "base.html" %}
+
+{% block title %}Heart Rate Progress{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Heart Rate Progress</h1>
+        <div>
+            {% if suggested_goal %}
+            <a href="{{ url_for('goals.from_progress', category='heart_rate', baseline=avg_resting_hr, target=suggested_goal) }}" class="btn btn-success">
+                <i class="fas fa-bullseye"></i> Set Goal ({{ suggested_goal }} bpm)
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if heart_rates %}
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Heart Rate Trend (Last 30 Days)</h4>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="heartRateChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Statistics</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h5>Average Heart Rate:</h5>
+                            <h2>{{ avg_heart_rate|round|int }} bpm</h2>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h5>Average Resting Heart Rate:</h5>
+                            <h2>{{ avg_resting_hr|round|int }} bpm</h2>
+                            <div class="text-muted">
+                                {% if avg_resting_hr <= 60 %}
+                                    Excellent
+                                {% elif avg_resting_hr <= 70 %}
+                                    Good
+                                {% elif avg_resting_hr <= 80 %}
+                                    Average
+                                {% else %}
+                                    Above Average
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if suggested_goal %}
+                            <div class="alert alert-info">
+                                <h5>Suggested Goal</h5>
+                                <p>
+                                    Based on your resting heart rate, we suggest setting a goal of 
+                                    <strong>{{ suggested_goal }} bpm</strong>.
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">Heart Rate Zones</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <div id="heartRateZonesChart"></div>
+                        </div>
+                        
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Zone</th>
+                                    <th>Heart Rate</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Resting</td>
+                                    <td>< 60 bpm</td>
+                                    <td>At rest</td>
+                                </tr>
+                                <tr>
+                                    <td>Fat Burn</td>
+                                    <td>60-100 bpm</td>
+                                    <td>Light activity</td>
+                                </tr>
+                                <tr>
+                                    <td>Cardio</td>
+                                    <td>100-140 bpm</td>
+                                    <td>Moderate activity</td>
+                                </tr>
+                                <tr>
+                                    <td>Peak</td>
+                                    <td>> 140 bpm</td>
+                                    <td>Intense activity</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h4 class="mb-0">Heart Rate by Activity Type</h4>
+                    </div>
+                    <div class="card-body" style="height: 400px;">
+                        <canvas id="activityHeartRateChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No Heart Rate Data</h4>
+            <p>You haven't recorded any heart rate measurements yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if heart_rates %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Format data for charts
+    var hrData = [
+        {% for hr in heart_rates %}
+            {
+                date: "{{ hr.timestamp.strftime('%Y-%m-%d') }}",
+                value: {{ hr.value }},
+                activity: "{{ hr.activity_type or 'resting' }}"
+            },
+        {% endfor %}
+    ];
+    
+    // Main Heart Rate Chart
+    var ctx = document.getElementById('heartRateChart').getContext('2d');
+    
+    // Sort by date
+    hrData.sort(function(a, b) {
+        return new Date(a.date) - new Date(b.date);
+    });
+    
+    var dates = hrData.map(function(d) { return d.date; });
+    var values = hrData.map(function(d) { return d.value; });
+    
+    var heartRateChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Heart Rate (bpm)',
+                data: values,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                pointBorderColor: '#fff',
+                pointRadius: 4,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'BPM'
+                    },
+                    suggestedMin: 40,
+                    suggestedMax: 180
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Heart Rate Zones Chart
+    var zonesData = hrData.reduce(function(acc, curr) {
+        if (curr.value < 60) acc.resting++;
+        else if (curr.value < 100) acc.fatBurn++;
+        else if (curr.value < 140) acc.cardio++;
+        else acc.peak++;
+        return acc;
+    }, {resting: 0, fatBurn: 0, cardio: 0, peak: 0});
+    
+    new Chart(document.getElementById('heartRateZonesChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Resting', 'Fat Burn', 'Cardio', 'Peak'],
+            datasets: [{
+                data: [zonesData.resting, zonesData.fatBurn, zonesData.cardio, zonesData.peak],
+                backgroundColor: [
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right'
+                }
+            }
+        }
+    });
+    
+    // Activity Heart Rate Chart - Enhanced version
+    var activityData = {};
+    
+    // Process data by activity type
+    hrData.forEach(function(hr) {
+        var activity = hr.activity || 'resting';
+        if (!activityData[activity]) {
+            activityData[activity] = {
+                values: [],
+                sum: 0,
+                count: 0
+            };
+        }
+        
+        activityData[activity].values.push(hr.value);
+        activityData[activity].sum += hr.value;
+        activityData[activity].count++;
+    });
+    
+    // Define color scheme for activities
+    var activityColors = {
+        'resting': { bg: 'rgba(75, 192, 192, 0.7)', border: 'rgba(75, 192, 192, 1)' },  // teal
+        'walking': { bg: 'rgba(54, 162, 235, 0.7)', border: 'rgba(54, 162, 235, 1)' },  // blue
+        'running': { bg: 'rgba(255, 99, 132, 0.7)', border: 'rgba(255, 99, 132, 1)' },  // red
+        'cycling': { bg: 'rgba(255, 159, 64, 0.7)', border: 'rgba(255, 159, 64, 1)' },  // orange
+        'workout': { bg: 'rgba(153, 102, 255, 0.7)', border: 'rgba(153, 102, 255, 1)' }, // purple
+        'swimming': { bg: 'rgba(0, 204, 255, 0.7)', border: 'rgba(0, 204, 255, 1)' }    // cyan
+    };
+    
+    // Default color for unknown activities
+    var defaultColor = { bg: 'rgba(201, 203, 207, 0.7)', border: 'rgba(201, 203, 207, 1)' };
+    
+    // Get activity labels and sort them (resting first, then alphabetically)
+    var activities = Object.keys(activityData);
+    activities.sort(function(a, b) {
+        if (a === 'resting') return -1;
+        if (b === 'resting') return 1;
+        return a.localeCompare(b);
+    });
+    
+    // Prepare data for the chart
+    var labels = activities.map(function(a) {
+        return a.charAt(0).toUpperCase() + a.slice(1);
+    });
+    
+    var averages = activities.map(function(a) {
+        return Math.round(activityData[a].sum / activityData[a].count);
+    });
+    
+    var backgroundColor = activities.map(function(a) {
+        return (activityColors[a] || defaultColor).bg;
+    });
+    
+    var borderColor = activities.map(function(a) {
+        return (activityColors[a] || defaultColor).border;
+    });
+    
+    // Create the chart
+    new Chart(document.getElementById('activityHeartRateChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Average Heart Rate (bpm)',
+                data: averages,
+                backgroundColor: backgroundColor,
+                borderColor: borderColor,
+                borderWidth: 2,
+                borderRadius: 5,
+                maxBarThickness: 60
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            var activityName = activities[context.dataIndex];
+                            var count = activityData[activityName].count;
+                            var average = context.raw;
+                            return [
+                                'Average: ' + average + ' bpm',
+                                'Data points: ' + count
+                            ];
+                        },
+                        title: function(context) {
+                            return context[0].label + ' Activity';
+                        }
+                    },
+                    titleFont: {
+                        weight: 'bold'
+                    },
+                    padding: 12,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    title: {
+                        display: true,
+                        text: 'Average BPM',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        precision: 0,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Activity Type',
+                        font: {
+                            weight: 'bold'
+                        }
+                    },
+                    ticks: {
+                        font: {
+                            size: 12
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 1500,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

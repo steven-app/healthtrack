@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Share Feature Feedback{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-comment-alt me-2"></i> Share Feature Feedback</h3>
+                </div>
+                <div class="card-body p-4">
+                    {% for category, message in get_flashed_messages(with_categories=true) %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                    
+                    <p>Thank you for trying out our new sharing feature! Your feedback helps us improve HealthTrack for everyone.</p>
+                    
+                    <form method="POST" action="{{ url_for('share.submit_feedback') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <!-- Overall satisfaction -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">How would you rate your overall experience with the sharing feature?</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="satisfaction" id="sat1" value="1" required>
+                                    <label class="form-check-label" for="sat1">Very Dissatisfied</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="satisfaction" id="sat2" value="2">
+                                    <label class="form-check-label" for="sat2">Dissatisfied</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="satisfaction" id="sat3" value="3">
+                                    <label class="form-check-label" for="sat3">Neutral</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="satisfaction" id="sat4" value="4">
+                                    <label class="form-check-label" for="sat4">Satisfied</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="satisfaction" id="sat5" value="5">
+                                    <label class="form-check-label" for="sat5">Very Satisfied</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ease of use -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">How easy was it to create and manage share links?</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ease_of_use" id="ease1" value="1" required>
+                                    <label class="form-check-label" for="ease1">Very Difficult</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ease_of_use" id="ease2" value="2">
+                                    <label class="form-check-label" for="ease2">Difficult</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ease_of_use" id="ease3" value="3">
+                                    <label class="form-check-label" for="ease3">Neutral</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ease_of_use" id="ease4" value="4">
+                                    <label class="form-check-label" for="ease4">Easy</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="ease_of_use" id="ease5" value="5">
+                                    <label class="form-check-label" for="ease5">Very Easy</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Features used -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Which sharing features did you use? (Select all that apply)</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="features_used" id="feature1" value="social_template">
+                                <label class="form-check-label" for="feature1">Social Template (for friends & family)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="features_used" id="feature2" value="medical_template">
+                                <label class="form-check-label" for="feature2">Medical Template (for healthcare providers)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="features_used" id="feature3" value="password_protection">
+                                <label class="form-check-label" for="feature3">Password Protection</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="features_used" id="feature4" value="privacy_controls">
+                                <label class="form-check-label" for="feature4">Privacy Controls (selecting which data to share)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="features_used" id="feature5" value="social_sharing">
+                                <label class="form-check-label" for="feature5">Social Media Sharing</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="features_used" id="feature6" value="access_logs">
+                                <label class="form-check-label" for="feature6">Access Logs</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Features importance -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Which feature was most important to you?</label>
+                            <select class="form-select" name="most_important_feature" required>
+                                <option value="" selected disabled>Select a feature</option>
+                                <option value="social_template">Social Template</option>
+                                <option value="medical_template">Medical Template</option>
+                                <option value="password_protection">Password Protection</option>
+                                <option value="privacy_controls">Privacy Controls</option>
+                                <option value="social_sharing">Social Media Sharing</option>
+                                <option value="access_logs">Access Logs</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Missing features -->
+                        <div class="mb-4">
+                            <label for="missing_features" class="form-label fw-bold">Are there any features you would like to see added to sharing?</label>
+                            <textarea class="form-control" id="missing_features" name="missing_features" rows="3" placeholder="Please describe any additional features you'd like to see..."></textarea>
+                        </div>
+                        
+                        <!-- Issues encountered -->
+                        <div class="mb-4">
+                            <label for="issues" class="form-label fw-bold">Did you encounter any issues or bugs while using the sharing feature?</label>
+                            <textarea class="form-control" id="issues" name="issues" rows="3" placeholder="Please describe any issues you encountered..."></textarea>
+                        </div>
+                        
+                        <!-- Suggestions -->
+                        <div class="mb-4">
+                            <label for="suggestions" class="form-label fw-bold">Do you have any suggestions for improving the sharing feature?</label>
+                            <textarea class="form-control" id="suggestions" name="suggestions" rows="3" placeholder="Your suggestions help us improve..."></textarea>
+                        </div>
+                        
+                        <!-- Email for follow-up (optional) -->
+                        <div class="mb-4">
+                            <label for="contact_email" class="form-label fw-bold">Email address (optional)</label>
+                            <input type="email" class="form-control" id="contact_email" name="contact_email" placeholder="Enter your email if you'd like us to follow up with you...">
+                            <div class="form-text">We'll never share your email with anyone else.</div>
+                        </div>
+                        
+                        <!-- Submit button -->
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Feedback
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

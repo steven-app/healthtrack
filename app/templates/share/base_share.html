@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ user.get_full_name() }}'s Health Data{% endblock %} | HealthTrack</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- OpenGraph Tags -->
+    <meta property="og:title" content="{% block og_title %}{{ user.get_full_name() }}'s Health Data{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}View my health stats shared from HealthTrack{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='img/og-preview.jpg', _external=True) }}{% endblock %}">
+    <meta property="og:url" content="{{ share_link.share_url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HealthTrack">
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ user.get_full_name() }}'s Health Data{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}View my health stats shared from HealthTrack{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='img/og-preview.jpg', _external=True) }}{% endblock %}">
+    
+    <!-- WeChat Sharing Meta -->
+    <meta itemprop="name" content="{% block wechat_title %}{{ user.get_full_name() }}'s Health Data{% endblock %}">
+    <meta itemprop="description" content="{% block wechat_description %}View my health stats shared from HealthTrack{% endblock %}">
+    <meta itemprop="image" content="{% block wechat_image %}{{ url_for('static', filename='img/og-preview.jpg', _external=True) }}{% endblock %}">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .header {
+            background-color: #4e73df;
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 1.5rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid #dee2e6;
+        }
+        .metric-card {
+            border-radius: 0.5rem;
+            box-shadow: 0 0.15rem 1.75rem rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+        .metric-header {
+            padding: 0.75rem 1.25rem;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e3e6f0;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        .metric-body {
+            padding: 1.25rem;
+        }
+        .share-banner {
+            background-color: #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        .chart-container {
+            height: 300px;
+            margin-bottom: 1.5rem;
+        }
+        .expired-notice {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+    
+    {% block head_extras %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1>{{ user.get_full_name() }}'s Health Data</h1>
+                    <p class="mb-0">
+                        {% if share_link.template_type == 'social' %}
+                            Social Health Report
+                        {% else %}
+                            Medical Health Report
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-light">
+                        <i class="fas fa-home me-1"></i> HealthTrack Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Content -->
+    <div class="container">
+        {% if share_link.is_expired %}
+        <div class="expired-notice">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>This share link has expired.</strong> The data shown may be outdated.
+        </div>
+        {% endif %}
+        
+        <div class="share-banner">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Health data from {{ share_link.date_range_start.strftime('%Y-%m-%d') }} to {{ share_link.date_range_end.strftime('%Y-%m-%d') }}
+                    </h4>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    {% if share_link.template_type == 'social' %}
+                    <a href="{{ url_for('share.export_pdf', token=share_link.share_token) }}" class="btn btn-primary">
+                        <i class="fas fa-file-pdf me-1"></i> Download PDF
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% block content %}{% endblock %}
+        
+        {% from 'share/social_share.html' import social_share_buttons %}
+        {% if share_link.template_type == 'social' %}
+            {{ social_share_buttons(
+                share_link.share_url, 
+                user.get_full_name() + "'s Health Data", 
+                "Check out my health stats from HealthTrack",
+                url_for('static', filename='img/og-preview.jpg', _external=True)
+            ) }}
+        {% endif %}
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p class="mb-0">Shared via <a href="{{ url_for('main.index') }}">HealthTrack</a></p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0 text-muted">Data shared on {{ share_link.created_at.strftime('%Y-%m-%d') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

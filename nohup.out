@@ -1,0 +1,18 @@
+[2025-05-02 08:39:09,891] INFO in __init__: Creating database tables if they don't exist...
+INFO:app:Creating database tables if they don't exist...
+[2025-05-02 08:39:09,892] INFO in __init__: Database tables created successfully.
+INFO:app:Database tables created successfully.
+ * Serving Flask app 'app'
+ * Debug mode: on
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.1.101:5001
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug: * Restarting with stat
+[2025-05-02 08:39:10,592] INFO in __init__: Creating database tables if they don't exist...
+INFO:app:Creating database tables if they don't exist...
+[2025-05-02 08:39:10,593] INFO in __init__: Database tables created successfully.
+INFO:app:Database tables created successfully.
+WARNING:werkzeug: * Debugger is active!
+INFO:werkzeug: * Debugger PIN: 338-920-826

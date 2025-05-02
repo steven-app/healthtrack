@@ -1,0 +1,221 @@
+/**
+ * HealthTrack Fitbit-style Color System
+ * Based on Fitbit Community color scheme
+ */
+
+:root {
+  /* Primary Colors */
+  --primary: #00B0B9; /* Fitbit teal - main brand color */
+  --primary-dark: #008C95; /* Darker teal for hover/active states */
+  --primary-light: #D9F5F7; /* Light teal for backgrounds and accents */
+  --accent: #FF4081; /* Bright pink for call-to-action elements */
+  
+  /* Functional Colors */
+  --activity: #4CD964; /* Green for activity metrics */
+  --activity-dark: #3EB350;
+  --activity-light: #E8F9EB;
+  --sleep: #7177F7; /* Purple for sleep metrics */
+  --sleep-dark: #5A61D6;
+  --sleep-light: #EBEEFE;
+  --heart-rate: #FF2D55; /* Red for heart rate metrics */
+  --heart-rate-dark: #E01A42;
+  --heart-rate-light: #FFE5EB;
+  --weight: #5AC8FA; /* Blue for weight metrics */
+  --weight-dark: #41A8D8;
+  --weight-light: #EAF7FE;
+  
+  /* Neutral Colors */
+  --background: #F8F9FA; /* Main background color */
+  --card-bg: #FFFFFF; /* Card background color */
+  --text-primary: #1D1E20; /* Main text color */
+  --text-secondary: #6C757D; /* Secondary text color */
+  --border: #E9ECEF; /* Border color */
+  --neutral-card-bg: #FAFAFA;         /* Almost white - subtle area distinction */
+  --neutral-text-primary: #303030;    /* Dark gray - primary text color */
+  --neutral-text-secondary: #767676;  /* Medium gray - secondary text and descriptions */
+  --neutral-border: #E8E8E8;          /* Light gray - subtle visual separation */
+  --neutral-muted: #A0A0A0;           /* Medium gray - less emphasized text */
+  
+  /* Status Colors */
+  --success: #34C759; /* Green for success states */
+  --warning: #FFCC00; /* Yellow for warning states */
+  --error: #FF3B30; /* Red for error states */
+  --status-info: #5AC8FA;             /* Blue - informational state */
+  
+  /* Chart Colors */
+  --chart-1: #00B0B9; /* Primary color */
+  --chart-2: #7177F7; /* Sleep color */
+  --chart-3: #FF2D55; /* Heart rate color */
+  --chart-4: #4CD964; /* Activity color */
+  --chart-5: #5AC8FA; /* Weight color */
+  --chart-6: #FF4081; /* Accent color */
+  --chart-7: #FFCC00; /* Warning color */
+
+  /* Primary Brand Colors */
+  --fitbit-blue: #00B0B9;
+  --fitbit-blue-dark: #008C95;
+  --fitbit-blue-light: #D9F5F7;
+  --fitbit-green: #4CD964;
+  --fitbit-green-dark: #3EB350;
+  --fitbit-green-light: #E8F9EB;
+  --fitbit-coral: #FB5B5A;
+  --fitbit-coral-dark: #E04342;
+  --fitbit-coral-light: #FDE5E5;
+  --fitbit-purple: #7177F7;
+  --fitbit-purple-dark: #5A61D6;
+  --fitbit-purple-light: #EBEEFE;
+  --fitbit-gray-100: #F5F6F7;
+  --fitbit-gray-200: #E8E8E8;
+  --fitbit-gray-300: #D1D1D1;
+  --fitbit-gray-400: #A8A8A8;
+  --fitbit-gray-500: #737373;
+  --fitbit-gray-600: #595959;
+  --fitbit-gray-700: #404040;
+  --fitbit-gray-800: #262626;
+  --fitbit-gray-900: #171717;
+  
+  /* Bootstrap-Compatible Colors */
+  --bs-primary: var(--primary);
+  --bs-secondary: var(--fitbit-gray-500);
+  --bs-success: var(--success);
+  --bs-info: var(--status-info);
+  --bs-warning: var(--warning);
+  --bs-danger: var(--error);
+  --bs-light: var(--fitbit-gray-100);
+  --bs-dark: var(--fitbit-gray-900);
+  
+  /* Accent Colors */
+  --fitbit-teal: #4CC2C0;
+  --fitbit-yellow: #FFD143;
+  --fitbit-orange: #FFA426;
+  
+  /* Semantic Colors */
+  --fitbit-success: var(--success);
+  --fitbit-warning: var(--warning);
+  --fitbit-danger: var(--error);
+  --fitbit-info: var(--fitbit-blue);
+  
+  /* Light Mode Theme Colors (default) */
+  --color-background: #ffffff;
+  --color-background-alt: var(--fitbit-gray-100);
+  --color-text-primary: var(--fitbit-gray-900);
+  --color-text-secondary: var(--fitbit-gray-700);
+  --color-text-muted: var(--fitbit-gray-600);
+  --color-border: var(--fitbit-gray-300);
+  --color-card-bg: #ffffff;
+  --color-card-shadow: rgba(0, 0, 0, 0.05);
+  --color-navbar-bg: #ffffff;
+  --color-footer-bg: var(--fitbit-gray-100);
+  --color-success-bg: rgba(62, 205, 94, 0.1);
+  --color-warning-bg: rgba(255, 209, 67, 0.1);
+  --color-danger-bg: rgba(251, 91, 90, 0.1);
+  --color-info-bg: rgba(0, 176, 185, 0.1);
+  --color-input-bg: #ffffff;
+  --color-input-border: var(--fitbit-gray-400);
+  --color-chart-grid: rgba(0, 0, 0, 0.1);
+  --color-chart-text: var(--fitbit-gray-600);
+  --color-modal-backdrop: rgba(0, 0, 0, 0.5);
+  --color-tooltip-bg: var(--fitbit-gray-900);
+  --color-tooltip-text: #ffffff;
+  --color-scrollbar: var(--fitbit-gray-400);
+  --color-scrollbar-thumb: var(--fitbit-gray-600);
+  --color-progress-bg: var(--fitbit-gray-200);
+
+  /* Achievement colors */
+  --bronze: #CD7F32;
+  --bronze-light: #F5E6D9;
+  --bronze-dark: #A66629;
+  --silver: #C0C0C0;
+  --silver-light: #F0F0F0;
+  --silver-dark: #A0A0A0;
+  --gold: #FFD700;
+  --gold-light: #FFF8CC;
+  --gold-dark: #CCAb00;
+  --color-progress-bg: rgba(0, 0, 0, 0.05);
+}
+
+/* Dark mode color variables */
+.dark-mode {
+  /* Primary Colors */
+  --primary: #00C7D1; /* Brighter teal for better visibility in dark mode */
+  --primary-dark: #00A8B0; /* Darker teal for hover/active states */
+  --primary-light: #153E41; /* Dark-tinted teal for backgrounds */
+  --accent: #FF5C8D; /* Brighter pink for better visibility */
+  
+  /* Functional Colors */
+  --activity: #57E370; /* Brighter green for dark mode */
+  --activity-dark: #44C958;
+  --activity-light: #193D1E;
+  --sleep: #8A90FF; /* Brighter purple for dark mode */
+  --sleep-dark: #7075F1;
+  --sleep-light: #232454;
+  --heart-rate: #FF4D6D; /* Brighter red for dark mode */
+  --heart-rate-dark: #E32B44;
+  --heart-rate-light: #3D1A1F;
+  --weight: #70D3FF; /* Brighter blue for dark mode */
+  --weight-dark: #4DB8E6;
+  --weight-light: #1A323D;
+  
+  /* Neutral Colors */
+  --background: #111213; /* Dark background color */
+  --card-bg: #1D1E20; /* Darker card background */
+  --text-primary: #FFFFFF; /* White text for dark mode */
+  --text-secondary: #ADBAC7; /* Light gray for secondary text */
+  --border: #2D333B; /* Darker border color */
+  --neutral-text-primary: #E0E0E0;     /* Light gray - primary text in dark mode */
+  --neutral-text-secondary: #A0A0A0;   /* Medium gray - secondary text in dark mode */
+  --neutral-border: #383838;           /* Dark border - subtle visual separation */
+  --neutral-muted: #666666;            /* Medium gray - less emphasized text */
+  
+  /* Status Colors */
+  --success: #3DD362; /* Brighter green for success */
+  --warning: #FFDC40; /* Brighter yellow for warnings */
+  --error: #FF4D4D; /* Brighter red for errors */
+  --status-info: #67D1FF;             /* Brightened blue */
+  
+  /* Chart Colors (slightly brighter for dark mode) */
+  --chart-1: #00D1DD; /* Brighter primary */
+  --chart-2: #8A90FF; /* Brighter sleep */
+  --chart-3: #FF4D6D; /* Brighter heart rate */
+  --chart-4: #57E370; /* Brighter activity */
+  --chart-5: #70D3FF; /* Brighter weight */
+  --chart-6: #FF5C8D; /* Brighter accent */
+  --chart-7: #FFDC40; /* Brighter warning */
+
+  /* Dark Mode Theme Colors */
+  --color-background: #121212;
+  --color-background-alt: #1e1e1e;
+  --color-text-primary: #f8f9fa;
+  --color-text-secondary: #e9ecef;
+  --color-text-muted: #adb5bd;
+  --color-border: #2c2c2c;
+  --color-card-bg: #1e1e1e;
+  --color-card-shadow: rgba(0, 0, 0, 0.3);
+  --color-navbar-bg: #1e1e1e;
+  --color-footer-bg: #1a1a1a;
+  --color-success-bg: rgba(62, 205, 94, 0.15);
+  --color-warning-bg: rgba(255, 209, 67, 0.15);
+  --color-danger-bg: rgba(251, 91, 90, 0.15);
+  --color-info-bg: rgba(0, 176, 185, 0.15);
+  --color-input-bg: #2c2c2c;
+  --color-input-border: #444444;
+  --color-chart-grid: rgba(255, 255, 255, 0.1);
+  --color-chart-text: #cccccc;
+  --color-modal-backdrop: rgba(0, 0, 0, 0.7);
+  --color-tooltip-bg: var(--fitbit-gray-700);
+  --color-tooltip-text: #ffffff;
+  --color-scrollbar: #444444;
+  --color-scrollbar-thumb: #666666;
+  --color-progress-bg: #2c2c2c;
+  
+  /* Achievement colors for dark mode */
+  --bronze: #E08E3C;
+  --bronze-light: #3D2E1A;
+  --bronze-dark: #B47332;
+  --silver: #D6D6D6;
+  --silver-light: #333333;
+  --silver-dark: #BABABA;
+  --gold: #FFE347;
+  --gold-light: #3D3A1A;
+  --gold-dark: #E6C300;
+}

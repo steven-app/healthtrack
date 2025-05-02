@@ -1,0 +1,80 @@
+<!-- Active Goals Widget -->
+<div class="col-md-6 mb-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-bullseye"></i> Active Goals
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if active_goals %}
+                {% for goal in active_goals %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0">
+                                {% if goal.category == 'steps' %}
+                                    <i class="fas fa-walking text-primary"></i>
+                                {% elif goal.category == 'weight' %}
+                                    <i class="fas fa-weight text-success"></i>
+                                {% elif goal.category == 'sleep' %}
+                                    <i class="fas fa-bed text-info"></i>
+                                {% elif goal.category == 'heart_rate' %}
+                                    <i class="fas fa-heartbeat text-danger"></i>
+                                {% endif %}
+                                {{ goal.category|capitalize }}: {{ goal.target_value }} {{ goal.unit }}
+                            </h6>
+                            <small>{{ goal.calculate_progress() }}%</small>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar" role="progressbar" 
+                                style="width: {{ goal.calculate_progress() }}%;" 
+                                aria-valuenow="{{ goal.calculate_progress() }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <div class="text-start mt-3">
+                    <a href="{{ url_for('goals.index') }}" class="btn btn-sm btn-outline-primary">View All Goals</a>
+                </div>
+            {% else %}
+                <p class="text-muted text-start">No active goals. <a href="{{ url_for('goals.create') }}">Create a goal</a> to track your progress!</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Recent Achievements Widget -->
+<div class="col-md-6 mb-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-trophy"></i> Recent Achievements
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if recent_achievements %}
+                <div class="row">
+                    {% for achievement in recent_achievements %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    <i class="fas fa-{{ achievement.icon|default('medal') }} fa-2x text-{{ achievement.level }}"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">{{ achievement.name }}</h6>
+                                    <small class="text-muted">{{ achievement.earned_at.strftime('%Y-%m-%d') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="text-start mt-3">
+                    <a href="{{ url_for('achievements.index') }}" class="btn btn-sm btn-outline-success">View All Achievements</a>
+                </div>
+            {% else %}
+                <p class="text-muted text-start">No achievements yet. Keep tracking your health data to earn achievements!</p>
+            {% endif %}
+        </div>
+    </div>
+</div> 

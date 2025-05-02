@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}Create Achievement{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>Create New Achievement</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('achievements.admin_index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Achievements
+            </a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Achievement Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {{ form.csrf_token }}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.icon.label(class="form-label") }}
+                                    {{ form.icon(class="form-control") }}
+                                    {% if form.icon.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.icon.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">{{ form.icon.description }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows=3) }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-select") }}
+                                    {% if form.category.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.category.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.level.label(class="form-label") }}
+                                    {{ form.level(class="form-select") }}
+                                    {% if form.level.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.level.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.condition_type.label(class="form-label") }}
+                                    {{ form.condition_type(class="form-select") }}
+                                    {% if form.condition_type.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.condition_type.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">{{ form.condition_type.description }}</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    {{ form.condition_value.label(class="form-label") }}
+                                    {{ form.condition_value(class="form-control") }}
+                                    {% if form.condition_value.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.condition_value.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">{{ form.condition_value.description }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.progress_related(class="form-check-input") }}
+                                    {{ form.progress_related.label(class="form-check-label") }}
+                                    <div class="text-muted">{{ form.progress_related.description }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ form.goal_related(class="form-check-input") }}
+                                    {{ form.goal_related.label(class="form-check-label") }}
+                                    <div class="text-muted">{{ form.goal_related.description }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group text-center mt-4">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> Create Achievement
+                            </button>
+                            <a href="{{ url_for('achievements.admin_index') }}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

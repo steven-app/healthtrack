@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Weight Progress{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Weight Progress</h1>
+        <div>
+            {% if suggested_goal %}
+            <a href="{{ url_for('goals.from_progress', category='weight', baseline=weights[-1].value, target=suggested_goal) }}" class="btn btn-success">
+                <i class="fas fa-bullseye"></i> Set Goal ({{ suggested_goal }} {{ weights[-1].unit }})
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% if weights %}
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Weight Over Time</h4>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="weightChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Statistics</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h5>Current Weight:</h5>
+                            <h2>{{ weights[-1].value }} {{ weights[-1].unit }}</h2>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h5>Change:</h5>
+                            {% if weight_change > 0 %}
+                                <div class="text-danger">
+                                    <i class="fas fa-arrow-up"></i> +{{ weight_change|round(1) }} {{ weights[-1].unit }} ({{ percent_change|round(1) }}%)
+                                </div>
+                            {% elif weight_change < 0 %}
+                                <div class="text-success">
+                                    <i class="fas fa-arrow-down"></i> {{ weight_change|round(1) }} {{ weights[-1].unit }} ({{ percent_change|round(1) }}%)
+                                </div>
+                            {% else %}
+                                <div class="text-muted">
+                                    <i class="fas fa-minus"></i> No change
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <h5>BMI:</h5>
+                            <div class="fs-3">{{ current_bmi|round(1) }}</div>
+                            <div class="text-muted">
+                                {% if current_bmi < 18.5 %}
+                                    Underweight
+                                {% elif current_bmi < 25 %}
+                                    Normal weight
+                                {% elif current_bmi < 30 %}
+                                    Overweight
+                                {% else %}
+                                    Obese
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if suggested_goal %}
+                            <div class="alert alert-info">
+                                <h5>Suggested Goal</h5>
+                                <p>
+                                    Based on your BMI, we suggest setting a goal of 
+                                    <strong>{{ suggested_goal }} {{ weights[-1].unit }}</strong>.
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">BMI Categories</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>BMI</th>
+                                    <th>Category</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="{% if current_bmi < 18.5 %}table-warning{% endif %}">
+                                    <td>Below 18.5</td>
+                                    <td>Underweight</td>
+                                </tr>
+                                <tr class="{% if current_bmi >= 18.5 and current_bmi < 25 %}table-success{% endif %}">
+                                    <td>18.5–24.9</td>
+                                    <td>Normal</td>
+                                </tr>
+                                <tr class="{% if current_bmi >= 25 and current_bmi < 30 %}table-warning{% endif %}">
+                                    <td>25.0–29.9</td>
+                                    <td>Overweight</td>
+                                </tr>
+                                <tr class="{% if current_bmi >= 30 %}table-danger{% endif %}">
+                                    <td>30.0 and above</td>
+                                    <td>Obese</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No Weight Data</h4>
+            <p>You haven't recorded any weight measurements yet.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if weights %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('weightChart').getContext('2d');
+    
+    // Format data for the chart
+    var dates = [
+        {% for weight in weights %}
+            "{{ weight.timestamp.strftime('%Y-%m-%d') }}",
+        {% endfor %}
+    ];
+    
+    var values = [
+        {% for weight in weights %}
+            {{ weight.value }},
+        {% endfor %}
+    ];
+    
+    var weightChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Weight ({{ weights[0].unit }})',
+                data: values,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+                pointBorderColor: '#fff',
+                pointRadius: 5,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Weight ({{ weights[0].unit }})'
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %} 

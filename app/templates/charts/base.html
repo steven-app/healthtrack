@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+.toggle-btn-group {
+    display: inline-flex;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e0f7fa;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    gap: 0;
+    margin-bottom: 1.5rem;
+}
+.toggle-btn {
+    border: none;
+    background: transparent;
+    color: #4ecdd4;
+    padding: 0.35em 1.2em;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.6;
+    min-width: 80px;
+    min-height: 36px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.18s, color 0.18s;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+.toggle-btn:first-child {
+    border-radius: 999px 0 0 999px;
+}
+.toggle-btn:last-child {
+    border-radius: 0 999px 999px 0;
+}
+.toggle-btn:not(:last-child) {
+    border-right: 1px solid #c2eaea;
+}
+.toggle-btn.active, .toggle-btn:active {
+    background: #4ecdd4;
+    color: #fff;
+    z-index: 1;
+}
+.toggle-btn:not(.active):hover {
+    background: #b2ebf2;
+    color: #0097a7;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-center mb-4">
+                        <div class="toggle-btn-group" role="group">
+                            <a href="{{ url_for(endpoint + '.daily') }}" class="toggle-btn {% if period == 'daily' %}active{% endif %}">Daily</a>
+                            <a href="{{ url_for(endpoint + '.weekly') }}" class="toggle-btn {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+                            <a href="{{ url_for(endpoint + '.monthly') }}" class="toggle-btn {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+                            <a href="{{ url_for(endpoint + '.six_months') }}" class="toggle-btn {% if period == 'six_months' %}active{% endif %}">6 Months</a>
+                            <a href="{{ url_for(endpoint + '.yearly') }}" class="toggle-btn {% if period == 'yearly' %}active{% endif %}">Yearly</a>
+                        </div>
+                    </div>
+                    
+                    {% if endpoint != 'activities' %}
+                    <div class="chart-container" style="position: relative; height:400px;">
+                        <canvas id="dataChart"></canvas>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var data = {{ data|tojson }};
+    
+    {% if endpoint == 'activities' %}
+    // Activity chart is handled in the activity.html template
+    {% else %}
+    // Create charts for other types (heart_rate, sleep, weight)
+    var chartPeriod = "{{ period }}";
+    var periodTitle = '{{ period|capitalize }}';
+    
+    if (periodTitle === 'Six_months') {
+        periodTitle = '6-Month Average';
+    } else if (periodTitle === 'Daily') {
+        periodTitle = 'Daily';
+    } else {
+        periodTitle += ' Average';
+    }
+    
+    var chartTitle = '';
+    
+    {% if endpoint == 'heartbeats' %}
+    chartTitle = periodTitle + ' Heart Rate';
+    {% elif endpoint == 'sleep' %}
+    chartTitle = periodTitle + ' Sleep';
+    {% elif endpoint == 'weight' %}
+    chartTitle = periodTitle + ' Weight';
+    {% endif %}
+    
+    var ctx = document.getElementById('dataChart').getContext('2d');
+    
+    // Function to detect if sparse labels are being used
+    function hasSparseLabels() {
+        // If data has labels and at least one empty label, consider it sparse
+        return data.labels && data.labels.some(function(label) { return label === ''; });
+    }
+    
+    // Check if we're using sparse labels
+    var usingSparseLabels = hasSparseLabels();
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: chartTitle
+                },
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                },
+                x: {
+                    ticks: {
+                        // Display all labels horizontally (no rotation)
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+</script>
+{% endblock %} 

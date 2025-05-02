@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Create Goal{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Create New Goal</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('goals.create') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select") }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.category.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.target_value.label(class="form-label") }}
+                            {{ form.target_value(class="form-control") }}
+                            {% if form.target_value.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.target_value.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.unit.label(class="form-label") }}
+                            {{ form.unit(class="form-select") }}
+                            {% if form.unit.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.unit.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.timeframe.label(class="form-label") }}
+                            {{ form.timeframe(class="form-select") }}
+                            {% if form.timeframe.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.timeframe.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.start_date.label(class="form-label") }}
+                            {{ form.start_date(class="form-control", type="date") }}
+                            {% if form.start_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.start_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.end_date.label(class="form-label") }}
+                            {{ form.end_date(class="form-control", type="date") }}
+                            {% if form.end_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.end_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('goals.index') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update units based on selected category
+        const categorySelect = document.getElementById('category');
+        const unitSelect = document.getElementById('unit');
+        
+        categorySelect.addEventListener('change', function() {
+            const category = this.value;
+            
+            // Clear current options
+            unitSelect.innerHTML = '';
+            
+            // Add appropriate options based on category
+            if (category === 'steps') {
+                addOption(unitSelect, 'steps', 'steps');
+            } else if (category === 'weight') {
+                addOption(unitSelect, 'kg', 'kg');
+            } else if (category === 'sleep') {
+                addOption(unitSelect, 'min', 'minutes');
+                addOption(unitSelect, 'hours', 'hours');
+            } else if (category === 'heart_rate') {
+                addOption(unitSelect, 'bpm', 'beats per minute');
+            }
+        });
+        
+        function addOption(select, value, text) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = text;
+            select.appendChild(option);
+        }
+    });
+</script>
+{% endblock %} 

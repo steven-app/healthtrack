@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Goals{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h1>My Goals</h1>
+        </div>
+        <div class="col-md-6 text-end">
+            <a href="{{ url_for('goals.create') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Create New Goal
+            </a>
+        </div>
+    </div>
+
+    <!-- Progress Overview Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">Progress Overview</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Steps Progress Card -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Steps Progress</h5>
+                                    <a href="{{ url_for('goals.steps_progress') }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8 text-start">
+                                            <h6>Weekly Steps Change</h6>
+                                            {% if steps_change > 0 %}
+                                                <div class="text-success">
+                                                    <i class="fas fa-arrow-up"></i> +{{ steps_change|round(1) }}% from last week
+                                                </div>
+                                            {% elif steps_change < 0 %}
+                                                <div class="text-danger">
+                                                    <i class="fas fa-arrow-down"></i> {{ steps_change|round(1) }}% from last week
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted">
+                                                    <i class="fas fa-minus"></i> No change from last week
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-start">
+                                            <a href="{{ url_for('goals.create', category='steps') }}" class="btn btn-sm btn-primary">Set Goal</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Weight Progress Card -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Weight Progress</h5>
+                                    <a href="{{ url_for('goals.weight_progress') }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8 text-start">
+                                            {% if latest_weight %}
+                                                <h6>Current Weight</h6>
+                                                <div class="fs-4">{{ latest_weight.value }} {{ latest_weight.unit }}</div>
+                                                <div class="text-muted small">Last updated: {{ latest_weight.timestamp.strftime('%Y-%m-%d') }}</div>
+                                            {% else %}
+                                                <div class="text-muted">No weight data available</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-start">
+                                            <a href="{{ url_for('goals.create', category='weight') }}" class="btn btn-sm btn-primary">Set Goal</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sleep Progress Card -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Sleep Progress</h5>
+                                    <a href="{{ url_for('goals.sleep_progress') }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8 text-start">
+                                            <h6>Sleep Quality Change</h6>
+                                            {% if sleep_change > 0 %}
+                                                <div class="text-success">
+                                                    <i class="fas fa-arrow-up"></i> +{{ sleep_change|round(1) }}% better sleep quality
+                                                </div>
+                                            {% elif sleep_change < 0 %}
+                                                <div class="text-danger">
+                                                    <i class="fas fa-arrow-down"></i> {{ sleep_change|round(1) }}% worse sleep quality
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted">
+                                                    <i class="fas fa-minus"></i> No change in sleep quality
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-start">
+                                            <a href="{{ url_for('goals.create', category='sleep') }}" class="btn btn-sm btn-primary">Set Goal</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Heart Rate Progress Card -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Heart Rate Progress</h5>
+                                    <a href="{{ url_for('goals.heart_rate_progress') }}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8 text-start">
+                                            <h6>Heart Rate Change</h6>
+                                            {% if heart_rate_change > 0 %}
+                                                <div class="text-danger">
+                                                    <i class="fas fa-arrow-up"></i> +{{ heart_rate_change|round(1) }}% increased resting rate
+                                                </div>
+                                            {% elif heart_rate_change < 0 %}
+                                                <div class="text-success">
+                                                    <i class="fas fa-arrow-down"></i> {{ heart_rate_change|round(1) }}% decreased resting rate
+                                                </div>
+                                            {% else %}
+                                                <div class="text-muted">
+                                                    <i class="fas fa-minus"></i> No change in heart rate
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-4 text-start">
+                                            <a href="{{ url_for('goals.create', category='heart_rate') }}" class="btn btn-sm btn-primary">Set Goal</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Goals Section -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Active Goals</h4>
+        </div>
+        <div class="card-body">
+            {% if active_goals %}
+                <div class="row">
+                    {% for goal in active_goals %}
+                        <div class="col-md-6 mb-3">
+                            <div class="goal-card {{ goal.category }}">
+                                <div class="card-header">
+                                    {{ goal.category|capitalize }} Goal
+                                </div>
+                                <div class="card-body text-start">
+                                    <div class="goal-icon">
+                                        {% if goal.category == 'steps' %}
+                                            <i class="fas fa-walking"></i>
+                                        {% elif goal.category == 'weight' %}
+                                            <i class="fas fa-weight"></i>
+                                        {% elif goal.category == 'sleep' %}
+                                            <i class="fas fa-bed"></i>
+                                        {% elif goal.category == 'heart_rate' %}
+                                            <i class="fas fa-heartbeat"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="goal-value">
+                                        {{ goal.target_value }} {{ goal.unit }}
+                                    </div>
+                                    <div class="goal-details">
+                                        <div><strong>Timeframe:</strong> {{ goal.timeframe|capitalize }}</div>
+                                        <div><strong>Current:</strong> {{ goal.current_value }} {{ goal.unit }}</div>
+                                    </div>
+                                    <div class="goal-progress">
+                                        <div class="progress-bar" role="progressbar" 
+                                            style="width: {{ goal.calculate_progress() }}%;" 
+                                            aria-valuenow="{{ goal.calculate_progress() }}" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">{{ goal.calculate_progress() }}%</div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <a href="{{ url_for('goals.view', goal_id=goal.id) }}" class="btn btn-sm btn-primary">
+                                            View Details
+                                        </a>
+                                        <form action="{{ url_for('goals.delete', goal_id=goal.id) }}" method="post" 
+                                            onsubmit="return confirm('Are you sure you want to delete this goal?');">
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="goal-footer text-start">
+                                    {% if goal.end_date %}
+                                        Ends on: {{ goal.end_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        Started: {{ goal.start_date.strftime('%Y-%m-%d') }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-start">You don't have any active goals. <a href="{{ url_for('goals.create') }}">Create a goal</a> to start tracking your progress!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Completed Goals Section -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Completed Goals</h4>
+        </div>
+        <div class="card-body">
+            {% if completed_goals %}
+                <div class="row">
+                    {% for goal in completed_goals %}
+                        <div class="col-md-6 mb-3">
+                            <div class="goal-card {{ goal.category }}">
+                                <div class="card-header">
+                                    {{ goal.category|capitalize }} Goal
+                                </div>
+                                <div class="card-body text-center">
+                                    <div class="goal-icon">
+                                        {% if goal.category == 'steps' %}
+                                            <i class="fas fa-walking"></i>
+                                        {% elif goal.category == 'weight' %}
+                                            <i class="fas fa-weight"></i>
+                                        {% elif goal.category == 'sleep' %}
+                                            <i class="fas fa-bed"></i>
+                                        {% elif goal.category == 'heart_rate' %}
+                                            <i class="fas fa-heartbeat"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="goal-value">
+                                        {{ goal.target_value }} {{ goal.unit }}
+                                    </div>
+                                    <div class="goal-details">
+                                        <div><strong>Timeframe:</strong> {{ goal.timeframe|capitalize }}</div>
+                                        <div><strong>Result:</strong> {{ goal.current_value }} {{ goal.unit }}</div>
+                                    </div>
+                                    <div class="goal-progress">
+                                        <div class="progress-bar" role="progressbar" 
+                                            style="width: 100%;" 
+                                            aria-valuenow="100" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100">Completed!</div>
+                                    </div>
+                                    <div class="d-flex justify-content-center mt-3">
+                                        <a href="{{ url_for('goals.view', goal_id=goal.id) }}" class="btn btn-sm btn-success">
+                                            View Details
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="goal-footer">
+                                    Completed on: {{ goal.updated_at.strftime('%Y-%m-%d') }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    You haven't completed any goals yet. Keep working on your active goals!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

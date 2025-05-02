@@ -1,0 +1,25 @@
+/* 
+ * Chart.js CSS
+ * This file ensures Chart.js components render properly
+ */
+.chartjs-render-monitor {
+  animation: chartjs-render-animation 0.001s;
+}
+.chartjs-size-monitor,
+.chartjs-size-monitor-expand,
+.chartjs-size-monitor-shrink {
+  position: absolute;
+  direction: ltr;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  z-index: -1;
+}
+@keyframes chartjs-render-animation {
+  0% { opacity: 0.99; }
+  100% { opacity: 1; }
+} 

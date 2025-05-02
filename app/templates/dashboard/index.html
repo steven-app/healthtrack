@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<!-- Dashboard styles with theme toggle fix -->
+<style>
+.data-freshness {
+    font-size: 0.9em;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+}
+.data-freshness.today { background-color: rgba(76, 217, 100, 0.1); color: var(--activity); }
+.data-freshness.yesterday { background-color: rgba(0, 176, 185, 0.1); color: var(--primary); }
+.data-freshness.recent { background-color: rgba(255, 204, 0, 0.1); color: var(--warning); }
+.data-freshness.old { background-color: rgba(255, 45, 85, 0.1); color: var(--heart-rate); }
+.data-freshness.very-old { background-color: rgba(118, 118, 118, 0.1); color: var(--text-secondary); }
+.data-freshness.no-data { background-color: rgba(118, 118, 118, 0.05); color: var(--text-secondary); }
+
+.summary-card {
+    height: 100%;
+    transition: all 0.3s;
+    border-radius: 16px;
+    overflow: hidden;
+}
+.summary-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+}
+.metric-value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.metric-change {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+.metric-change.positive { color: var(--activity); }
+.metric-change.negative { color: var(--heart-rate); }
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+}
+.data-range-selector {
+    display: flex;
+    justify-content: center;
+    margin: 15px auto;
+}
+.data-range-selector .btn-group .btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 20px;
+}
+.data-range-selector .btn-group .btn.active {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+.no-data-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem;
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    margin: 2rem 0;
+}
+.no-data-message i {
+    font-size: 3.5rem;
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+}
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255,255,255,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+}
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    color: var(--primary) !important;
+}
+
+/* Fitbit style card title icons */
+.card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 10px;
+    background-color: rgba(0, 176, 185, 0.1);
+}
+.card-icon i {
+    color: var(--primary);
+}
+.card-icon.weight {
+    background-color: rgba(90, 200, 250, 0.1);
+}
+.card-icon.weight i {
+    color: var(--weight);
+}
+.card-icon.heart {
+    background-color: rgba(255, 45, 85, 0.1);
+}
+.card-icon.heart i {
+    color: var(--heart-rate);
+}
+.card-icon.activity {
+    background-color: rgba(76, 217, 100, 0.1);
+}
+.card-icon.activity i {
+    color: var(--activity);
+}
+.card-icon.sleep {
+    background-color: rgba(113, 119, 247, 0.1);
+}
+.card-icon.sleep i {
+    color: var(--sleep);
+}
+
+/* Refresh button styles */
+#refresh-dashboard {
+    border: none;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    border-radius: 20px;
+    padding: 0.35rem 0.75rem;
+    transition: all 0.2s;
+}
+#refresh-dashboard:hover {
+    background-color: var(--primary);
+    color: white;
+}
+
+/* Main header styles */
+.dashboard-header {
+    padding: 1rem 1.5rem;
+    border-radius: 16px;
+}
+.dashboard-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.text-left {
+    text-align: left !important;
+    display: block;
+    width: 100%;
+}
+
+.toggle-btn-group {
+    display: inline-flex;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #e0f7fa;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    gap: 0;
+}
+.toggle-btn {
+    border: none;
+    background: transparent;
+    color: #4ecdd4;
+    padding: 0.35em 1.2em;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.6;
+    min-width: 80px;
+    min-height: 36px;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.18s, color 0.18s;
+    border-radius: 0;
+    box-shadow: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.toggle-btn:first-child {
+    border-radius: 999px 0 0 999px;
+}
+.toggle-btn:last-child {
+    border-radius: 0 999px 999px 0;
+}
+.toggle-btn:not(:last-child) {
+    border-right: 1px solid #c2eaea;
+}
+.toggle-btn.active, .toggle-btn:active {
+    background: #4ecdd4;
+    color: #fff;
+    z-index: 1;
+}
+.toggle-btn:not(.active):hover {
+    background: #b2ebf2;
+    color: #0097a7;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm dashboard-header">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="card-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h2 class="dashboard-title mb-0">Health Dashboard</h2>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button type="button" class="btn btn-sm me-3" id="refresh-dashboard" title="Force refresh data cache">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh
+                            </button>
+                            <div class="data-range-selector">
+                                <div class="toggle-btn-group" role="group">
+                                    <button type="button" class="toggle-btn active" id="range-7d">7 Days</button>
+                                    <button type="button" class="toggle-btn" id="range-30d">30 Days</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted mt-2 text-start" id="data-range">
+                        <span id="date-range-text">Data from past 7 days</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No data message for new users -->
+    <div class="row mb-4" id="no-data-message" style="display: none;">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-cloud-upload-alt fa-4x mb-3"></i>
+                    <h3>Welcome to Your Health Dashboard!</h3>
+                    <p class="lead mb-4">It looks like you haven't uploaded any health data yet.</p>
+                    <p class="mb-4">To get started, upload your health data from supported devices or apps.</p>
+                    <a href="{{ url_for('upload.upload_file') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-upload me-2"></i>Upload Health Data
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Always show charts, regardless of data status -->
+    <div class="row">
+        <!-- Summary Cards -->
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm summary-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon weight">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Weight</h5>
+                    </div>
+                    <div id="weight-summary">
+                        <div class="d-flex align-items-baseline">
+                            <span class="metric-value">--</span>
+                            <span class="ms-1" id="weight-unit">kg</span>
+                        </div>
+                        <div class="metric-change" id="weight-change"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm summary-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon heart">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Heart Rate</h5>
+                    </div>
+                    <div id="heart-rate-summary">
+                        <div class="d-flex align-items-baseline">
+                            <span class="metric-value">--</span>
+                            <span class="ms-1">bpm</span>
+                        </div>
+                        <div class="text-muted small" id="heart-rate-range"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm summary-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon activity">
+                            <i class="fas fa-walking"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Activity</h5>
+                    </div>
+                    <div id="activity-summary">
+                        <div class="d-flex align-items-baseline">
+                            <span class="metric-value">--</span>
+                            <span class="ms-1">steps</span>
+                        </div>
+                        <div class="text-muted small" id="activity-avg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm summary-card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon sleep">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Sleep</h5>
+                    </div>
+                    <div id="sleep-summary">
+                        <div class="d-flex align-items-baseline">
+                            <span class="metric-value">--</span>
+                            <span class="ms-1">hours</span>
+                        </div>
+                        <div class="text-muted small" id="sleep-quality"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon weight">
+                            <i class="fas fa-weight"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Weight Trend</h5>
+                    </div>
+                    <div class="chart-container" id="weight-chart-container">
+                        <canvas id="weight-chart"></canvas>
+                        <div class="loading-overlay" id="weight-chart-loading">
+                            <div class="spinner-border text-primary loading-spinner" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon heart">
+                            <i class="fas fa-heartbeat"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Heart Rate Trend</h5>
+                    </div>
+                    <div class="chart-container" id="heart-rate-chart-container">
+                    <canvas id="heart-rate-chart"></canvas>
+                        <div class="loading-overlay" id="heart-rate-chart-loading">
+                            <div class="spinner-border text-primary loading-spinner" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon activity">
+                            <i class="fas fa-walking"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Activity Trend</h5>
+                    </div>
+                    <div class="chart-container" id="activity-chart-container">
+                    <canvas id="activity-chart"></canvas>
+                        <div class="loading-overlay" id="activity-chart-loading">
+                            <div class="spinner-border text-primary loading-spinner" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="card-icon sleep">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <h5 class="card-title mb-0">Sleep Duration</h5>
+                    </div>
+                    <div class="chart-container" id="sleep-chart-container">
+                    <canvas id="sleep-chart"></canvas>
+                        <div class="loading-overlay" id="sleep-chart-loading">
+                            <div class="spinner-border text-primary loading-spinner" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Goals and Achievements -->
+    <div class="row" id="goals-achievements-container">
+        <!-- This will be loaded via AJAX -->
+        <div class="col-12 text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading goals and achievements...</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Load Chart.js first -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Load dashboard modules -->
+<script type="module" src="{{ url_for('static', filename='js/dashboard/main.js') }}"></script>
+
+<script>
+// Initialize data if provided
+{% if data_json %}
+window.dashboardData = {{ data_json|safe }};
+{% endif %}
+</script>
+{% endblock %} 
