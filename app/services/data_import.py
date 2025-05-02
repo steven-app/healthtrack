@@ -155,12 +155,13 @@ class DataImportService:
         """Import data from CSV files"""
         records_to_commit = []
         sample_data = []
-        total_processed = 0
+        total_processed = 0  # 添加总记录计数器
         
         def commit_batch_local():
-            nonlocal records_to_commit
+            nonlocal records_to_commit, total_processed
             if records_to_commit:
                 self._save_health_data_batch(records_to_commit)
+                total_processed += len(records_to_commit)  # 更新总记录数
                 records_to_commit = []
 
         try:
@@ -435,7 +436,7 @@ class DataImportService:
             
             # Update import log with record count
             if self.import_log:
-                self.import_log.records_processed = len(sample_data)
+                self.import_log.records_processed = total_processed  # 使用实际处理的记录总数
                 self.import_log.sample_data = str(sample_data[:5]) if sample_data else "[]"
                 db.session.commit()
                 
